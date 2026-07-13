@@ -1,0 +1,15 @@
+import { cn } from "@/lib/utils";
+
+function SectionContainer({
+  className,
+  ...props
+}: React.ComponentProps<"div">) {
+  return (
+    <div
+      className={cn("mx-auto w-full max-w-[1440px] px-6 lg:px-20", className)}
+      {...props}
+    />
+  );
+}
+
+export { SectionContainer };
