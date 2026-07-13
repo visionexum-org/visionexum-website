@@ -3,26 +3,16 @@ import { ButtonLink } from "@/components/ui/button";
 function HeroContent() {
   return (
     <div className="flex flex-col gap-8">
-      <h1
-        aria-label="Não fazemos campanhas. Construímos a fundação da sua percepção."
-        className="font-heading text-[2.5rem] font-bold leading-[1.1] tracking-tight text-white sm:text-5xl lg:text-[3.4rem]"
-      >
-        <span aria-hidden="true" className="block overflow-hidden">
-          <span className="hero-heading-line inline-block">
-            <span className="text-gold">Não fazemos campanhas</span>.
-          </span>
-        </span>
-        <span aria-hidden="true" className="block overflow-hidden">
-          <span className="hero-heading-line inline-block">
-            Construímos a fundação da sua
-          </span>
-        </span>
-        <span aria-hidden="true" className="block overflow-hidden">
-          <span className="hero-heading-line inline-block">percepção.</span>
+      <h1 className="hero-heading font-heading max-w-xl text-[32px] font-bold leading-9.5 tracking-tight text-white lg:max-w-154 lg:text-[40px] lg:leading-11.5">
+        <span className="text-gold">Não fazemos campanhas</span>
+        <span className="text-white">.</span>
+        <br />
+        <span className="text-white">
+          Construímos a fundação da sua percepção.
         </span>
       </h1>
 
-      <p className="hero-subtext max-w-lg text-base leading-relaxed text-white/70 sm:text-lg">
+      <p className="hero-subtext max-w-lg text-[20px] leading-7 text-white/70 lg:max-w-147.25">
         Ajudamos PMEs angolanas a transformar percepção numa vantagem
         estratégica mensurável — através do Visio Method™.
       </p>

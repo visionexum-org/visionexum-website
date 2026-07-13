@@ -32,42 +32,35 @@ function Navbar() {
           <Logo className="h-6 w-auto text-white" />
         </a>
 
-        <nav className="hidden items-center gap-8 lg:flex">
-          {navLinks.map((link) => (
-            <a
-              key={link.href}
-              href={link.href}
-              className="text-sm text-white/85 transition-colors hover:text-white"
-            >
-              {link.label}
-            </a>
-          ))}
-        </nav>
+        <div className="hidden items-center gap-7.25 lg:flex">
+          <nav className="flex items-center gap-7.25">
+            {navLinks.map((link) => (
+              <a
+                key={link.href}
+                href={link.href}
+                className="text-sm text-white/85 transition-colors hover:text-white"
+              >
+                {link.label}
+              </a>
+            ))}
+          </nav>
 
-        <div className="flex items-center gap-4">
-          <span
-            aria-hidden="true"
-            className="hidden h-1 w-1 rounded-full bg-white/40 lg:block"
-          />
-          <ButtonLink
-            href="#contato"
-            variant="pillSolid"
-            size="pill"
-            className="hidden lg:inline-flex"
-          >
+          <span aria-hidden="true" className="h-1 w-1 rounded-full bg-white/40" />
+
+          <ButtonLink href="#contato" variant="pillSolid" size="lg">
             Diagnóstico ↗
           </ButtonLink>
-
-          <button
-            type="button"
-            aria-label={isMenuOpen ? "Fechar menu" : "Abrir menu"}
-            aria-expanded={isMenuOpen}
-            onClick={() => setIsMenuOpen((open) => !open)}
-            className="inline-flex size-9 items-center justify-center rounded-full text-white lg:hidden"
-          >
-            {isMenuOpen ? <X className="size-5" /> : <Menu className="size-5" />}
-          </button>
         </div>
+
+        <button
+          type="button"
+          aria-label={isMenuOpen ? "Fechar menu" : "Abrir menu"}
+          aria-expanded={isMenuOpen}
+          onClick={() => setIsMenuOpen((open) => !open)}
+          className="inline-flex size-9 items-center justify-center rounded-full text-white lg:hidden"
+        >
+          {isMenuOpen ? <X className="size-5" /> : <Menu className="size-5" />}
+        </button>
       </SectionContainer>
 
       {isMenuOpen && (

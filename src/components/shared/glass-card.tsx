@@ -9,7 +9,7 @@ function GlassCard({
   return (
     <div
       className={cn(
-        "rounded-[calc(var(--radius-3xl)+1px)] bg-gradient-to-br from-gold/60 via-gold/10 to-transparent p-px",
+        "rounded-[calc(var(--radius-3xl)+1px)] bg-linear-to-br from-gold/60 via-gold/10 to-transparent p-px",
         className
       )}
       {...props}

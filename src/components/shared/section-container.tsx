@@ -6,7 +6,7 @@ function SectionContainer({
 }: React.ComponentProps<"div">) {
   return (
     <div
-      className={cn("mx-auto w-full max-w-[1440px] px-6 lg:px-20", className)}
+      className={cn("mx-auto w-full max-w-[1440px] px-6 lg:px-24", className)}
       {...props}
     />
   );

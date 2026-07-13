@@ -3,7 +3,7 @@
 import { useRef } from "react";
 import { useGSAP } from "@gsap/react";
 
-import { gsap } from "@/lib/gsap";
+import { gsap, SplitText } from "@/lib/gsap";
 import { SectionContainer } from "@/components/shared/section-container";
 import { HeroBackground } from "@/components/sections/hero/hero-background";
 import { HeroContent } from "@/components/sections/hero/hero-content";
@@ -30,17 +30,22 @@ function HeroSection() {
 
           if (!isDesktopMotion) {
             gsap.set(
-              [
-                ".hero-bg",
-                ".hero-heading-line",
-                ".hero-subtext",
-                ".hero-cta-item",
-                ".hero-card",
-              ],
+              [".hero-bg", ".hero-heading", ".hero-subtext", ".hero-cta-item", ".hero-card"],
               { clearProps: "all" }
             );
             return;
           }
+
+          const heading = sectionRef.current?.querySelector<HTMLElement>(
+            ".hero-heading"
+          );
+          const split = heading
+            ? SplitText.create(heading, {
+                type: "lines",
+                mask: "lines",
+                linesClass: "hero-heading-line",
+              })
+            : null;
 
           const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
 
@@ -62,20 +67,9 @@ function HeroSection() {
               "-=0.5"
             );
 
-          const cards = gsap.utils.toArray<HTMLElement>(".hero-card");
-          cards.forEach((card, index) => {
-            gsap.to(card, {
-              y: index % 2 === 0 ? -10 : -14,
-              duration: 2.6 + index * 0.4,
-              ease: "sine.inOut",
-              repeat: -1,
-              yoyo: true,
-              delay: 1.2 + index * 0.15,
-            });
-          });
-
           return () => {
             tl.kill();
+            split?.revert();
           };
         }
       );
