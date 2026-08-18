@@ -252,9 +252,71 @@ function ColorBends({
       renderer.render(scene, camera);
       rafRef.current = requestAnimationFrame(loop);
     };
-    rafRef.current = requestAnimationFrame(loop);
+
+    // Two separate problems, one cause: this canvas used to render every frame
+    // from mount, whether or not it was anywhere near the viewport.
+    //
+    // Drivers defer linking a shader program until something actually has to
+    // be rasterised, so the compile landed the moment the footer scrolled into
+    // view — a single ~3.2s synchronous block on the main thread, which stalled
+    // scrolling and left anchor navigation stranded wherever it happened to be.
+    // compileAsync links it up front, off the critical path, using parallel
+    // shader compilation where the driver supports it.
+    //
+    // The loop is then gated on visibility, so an off-screen footer no longer
+    // burns a GPU frame every 16ms behind the rest of the page.
+    let isVisible = false;
+    const startLoop = () => {
+      if (rafRef.current === null) {
+        clock.getDelta();
+        rafRef.current = requestAnimationFrame(loop);
+      }
+    };
+    const stopLoop = () => {
+      if (rafRef.current !== null) {
+        cancelAnimationFrame(rafRef.current);
+        rafRef.current = null;
+      }
+    };
+
+    const warmUp = () => {
+      const maybeAsync = (
+        renderer as THREE.WebGLRenderer & {
+          compileAsync?: (s: THREE.Scene, c: THREE.Camera) => Promise<unknown>;
+        }
+      ).compileAsync;
+      if (typeof maybeAsync === "function") {
+        maybeAsync.call(renderer, scene, camera).catch(() => renderer.compile(scene, camera));
+      } else {
+        renderer.compile(scene, camera);
+      }
+    };
+
+    if (typeof requestIdleCallback === "function") {
+      requestIdleCallback(warmUp, { timeout: 2000 });
+    } else {
+      setTimeout(warmUp, 200);
+    }
+
+    const visibilityObserver = new IntersectionObserver(
+      ([entry]) => {
+        isVisible = entry.isIntersecting;
+        if (isVisible) startLoop();
+        else stopLoop();
+      },
+      { rootMargin: "200px" }
+    );
+    visibilityObserver.observe(container);
+
+    const handleDocumentVisibility = () => {
+      if (document.hidden) stopLoop();
+      else if (isVisible) startLoop();
+    };
+    document.addEventListener("visibilitychange", handleDocumentVisibility);
 
     return () => {
+      visibilityObserver.disconnect();
+      document.removeEventListener("visibilitychange", handleDocumentVisibility);
       if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
       if (resizeObserverRef.current) resizeObserverRef.current.disconnect();
       else window.removeEventListener("resize", handleResize);

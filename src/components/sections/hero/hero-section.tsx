@@ -91,7 +91,7 @@ function HeroSection() {
     <section
       id="home"
       ref={sectionRef}
-      className="relative flex min-h-dvh flex-col justify-end overflow-hidden rounded-b-[32px] bg-navy pt-28 pb-12 lg:min-h-screen lg:justify-center lg:pt-40 lg:pb-24"
+      className="relative flex min-h-dvh flex-col justify-end overflow-hidden bg-navy pt-28 pb-12 lg:min-h-screen lg:justify-center lg:pt-40 lg:pb-24"
     >
       <HeroBackground />
 

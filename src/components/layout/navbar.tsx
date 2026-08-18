@@ -2,22 +2,20 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useGSAP } from "@gsap/react";
-import { Menu, X } from "lucide-react";
 
 import { gsap } from "@/lib/gsap";
 import { cn } from "@/lib/utils";
 import { navLinks } from "@/data/navigation";
 import { ButtonLink } from "@/components/ui/button";
 import { Logo } from "@/components/shared/logo";
-import { SectionContainer } from "@/components/shared/section-container";
 import { ArrowUpRight } from "@/components/shared/icons";
+import { MobileMenu } from "@/components/layout/mobile-menu";
 
 const diagnosticoClassName = "border-navy bg-lavender text-navy hover:bg-lavender/80";
 
 function Navbar() {
   const navRef = useRef<HTMLElement>(null);
   const isFirstRun = useRef(true);
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isHidden, setIsHidden] = useState(false);
 
@@ -80,8 +78,11 @@ function Navbar() {
     };
   }, []);
 
+  // z-50 keeps the bar above the portalled menu overlay (z-40) so the logo and
+  // the toggler stay reachable while it is open, mirroring the reference's
+  // nav/nav-content stacking.
   return (
-    <header ref={navRef} className="fixed inset-x-0 top-0 z-20">
+    <header ref={navRef} className="fixed inset-x-0 top-0 z-50">
       {/* Pill wrapper is a plain CSS transition, deliberately separate from
           the GSAP-driven <header> above (which only touches y/yPercent/
           opacity) — mixing transition-all with GSAP transforms on the same
@@ -124,49 +125,8 @@ function Navbar() {
           </ButtonLink>
         </div>
 
-        <button
-          type="button"
-          aria-label={isMenuOpen ? "Fechar menu" : "Abrir menu"}
-          aria-expanded={isMenuOpen}
-          onClick={() => setIsMenuOpen((open) => !open)}
-          className="inline-flex size-9 items-center justify-center rounded-full text-white lg:hidden"
-        >
-          {isMenuOpen ? <X className="size-5" /> : <Menu className="size-5" />}
-        </button>
+        <MobileMenu />
       </div>
-
-      {isMenuOpen && (
-        <div
-          className={cn(
-            "mx-auto border-t border-white/10 bg-navy/95 backdrop-blur-xl lg:hidden",
-            isScrolled
-              ? "mt-1 w-[calc(100%-2rem)] max-w-295 rounded-3xl"
-              : "w-full rounded-none"
-          )}
-        >
-          <SectionContainer className="flex flex-col gap-1 py-4">
-            {navLinks.map((link) => (
-              <a
-                key={link.href}
-                href={link.href}
-                onClick={() => setIsMenuOpen(false)}
-                className="rounded-lg px-2 py-3 text-sm text-white/90 transition-colors hover:bg-white/5 hover:text-white"
-              >
-                {link.label}
-              </a>
-            ))}
-            <ButtonLink
-              href="#contato"
-              variant="pillOutline"
-              size="pill"
-              className={cn("mt-2 w-full text-sm", diagnosticoClassName)}
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Diagnóstico <ArrowUpRight className="size-3" />
-            </ButtonLink>
-          </SectionContainer>
-        </div>
-      )}
     </header>
   );
 }
