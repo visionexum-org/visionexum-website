@@ -20,7 +20,6 @@ export type ServiceStepData = {
   howItWorks: ServiceHowItWorksItem[];
 };
 
-// MOCK — conteúdo placeholder do cliente; só o Degrau 0 tem o detalhe final.
 export const serviceSteps: ServiceStepData[] = [
   {
     tab: "Degrau-0",
@@ -65,7 +64,7 @@ export const serviceSteps: ServiceStepData[] = [
     title: "Diagnóstico de Percepção",
     icon: "search",
     summary:
-      "Meio dia que revela o que a empresa parece ser — e o que devia ser.",
+      "Análise completa com Visio Score™ nas 4 dimensões e roadmap de prioridades.",
     receives: [
       "Relatório completo das 4 dimensões",
       "Visio Score auditado e documentado",
@@ -101,7 +100,7 @@ export const serviceSteps: ServiceStepData[] = [
     title: "Fundação Estratégica",
     icon: "layers",
     summary:
-      "Meio dia que revela o que a empresa parece ser — e o que devia ser.",
+      "As 5 camadas que transformam percepção num activo permanente da empresa.",
     receives: [
       "Território de percepção definido",
       "Narrativa central e mensagens-chave",
@@ -137,7 +136,7 @@ export const serviceSteps: ServiceStepData[] = [
     title: "Orquestração Estratégica",
     icon: "loader",
     summary:
-      "Meio dia que revela o que a empresa parece ser — e o que devia ser.",
+      "Acompanhamento contínuo para garantir que a percepção construída evolui e resiste.",
     receives: [
       "Gestão contínua da percepção",
       "Revisão trimestral do Visio Score",

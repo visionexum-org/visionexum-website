@@ -42,7 +42,7 @@ function PhaseCard({ data, bgImage }: { data: MethodPhaseData; bgImage: string }
         <div className="method-card-meta grid grid-cols-[2fr_3fr] gap-4">
           <div>
             <p className="font-sans text-[13px] leading-4.25 font-semibold text-navy">
-              Duração
+              {data.durationLabel ?? "Duração"}
             </p>
             <p className="mt-1 font-sans text-[12px] leading-[16px] font-normal text-navy/70">
               {data.duration}
@@ -50,7 +50,7 @@ function PhaseCard({ data, bgImage }: { data: MethodPhaseData; bgImage: string }
           </div>
           <div>
             <p className="font-sans text-[13px] leading-4.25 font-semibold text-navy">
-              Entregáveis
+              {data.deliverablesLabel ?? "Entregáveis"}
             </p>
             <p className="mt-1 font-sans text-[12px] leading-[16px] font-normal text-navy/70">
               {data.deliverables}
