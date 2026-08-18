@@ -20,32 +20,111 @@ const COLUMN_GRID = "lg:grid-cols-[599fr_793fr]";
 function VisioScoreSection() {
   const sectionRef = useRef<HTMLElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
-  const [activeIndex, setActiveIndex] = useState(0);
+  const leavingRef = useRef<HTMLDivElement>(null);
+  // `from` holds the dimension being dealt away, so both cards exist for the
+  // length of the swap; null means nothing is in flight.
+  const [view, setView] = useState<{
+    index: number;
+    from: number | null;
+    direction: number;
+  }>({ index: 0, from: null, direction: 0 });
+  const [isInView, setIsInView] = useState(false);
   const total = scoreDimensions.length;
+  const activeIndex = view.index;
 
   const go = (direction: number) =>
-    setActiveIndex((current) => (current + direction + total) % total);
+    setView((current) => ({
+      index: (current.index + direction + total) % total,
+      from: current.index,
+      direction,
+    }));
+
+  // Only advance while the section is actually on screen. Left ungated, the
+  // carousel keeps cycling out of view and the visitor can arrive to find a
+  // swap already mid-flight, colliding with the intro animation.
+  useEffect(() => {
+    const section = sectionRef.current;
+    if (!section) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => setIsInView(entry.isIntersecting),
+      { threshold: 0.35 }
+    );
+    observer.observe(section);
+    return () => observer.disconnect();
+  }, []);
 
   // Auto-advance the carousel; any change (manual or auto) resets the timer.
   // Held back under reduced-motion so content doesn't move on its own.
   useEffect(() => {
+    if (!isInView) return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const id = window.setTimeout(() => {
-      setActiveIndex((current) => (current + 1) % total);
+      setView((current) => ({
+        index: (current.index + 1) % total,
+        from: current.index,
+        direction: 1,
+      }));
     }, AUTO_ADVANCE_MS);
     return () => window.clearTimeout(id);
-  }, [activeIndex, total]);
+  }, [activeIndex, total, isInView]);
 
-  // Cross-fade the dimension card whenever the active dimension changes.
+  // Deck swap. Skipped on mount (`from` starts null) — the intro timeline
+  // owns the card's first appearance, and having both animate the same
+  // element was what made it arrive glitching.
   useEffect(() => {
-    const card = cardRef.current;
-    if (!card) return;
-    gsap.fromTo(
-      card,
-      { opacity: 0, y: 12 },
-      { opacity: 1, y: 0, duration: 0.45, ease: "power2.out" }
+    if (view.from === null) return;
+
+    const incoming = cardRef.current;
+    const outgoing = leavingRef.current;
+    const settle = () =>
+      setView((current) => (current.from === null ? current : { ...current, from: null }));
+
+    if (!incoming || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      settle();
+      return;
+    }
+
+    const dir = view.direction;
+    const tl = gsap.timeline({ onComplete: settle });
+
+    // Incoming rides in from the side you are travelling towards and lands on
+    // top; the outgoing card slides the opposite way and drops underneath.
+    tl.fromTo(
+      incoming,
+      { xPercent: dir * 46, opacity: 0, scale: 0.95, rotate: dir * 1.6, force3D: true },
+      {
+        xPercent: 0,
+        opacity: 1,
+        scale: 1,
+        rotate: 0,
+        duration: 0.62,
+        ease: "power3.out",
+        force3D: true,
+        clearProps: "transform,opacity",
+      },
+      0
     );
-  }, [activeIndex]);
+
+    if (outgoing) {
+      tl.to(
+        outgoing,
+        {
+          xPercent: dir * -34,
+          opacity: 0,
+          scale: 0.94,
+          rotate: dir * -1.4,
+          duration: 0.46,
+          ease: "power2.in",
+          force3D: true,
+        },
+        0
+      );
+    }
+
+    return () => {
+      tl.kill();
+    };
+  }, [view]);
 
   useGSAP(
     () => {
@@ -133,8 +212,22 @@ function VisioScoreSection() {
             </p>
           </div>
 
-          <div ref={cardRef} className="vs-card">
-            <DimensionCard data={dimension} />
+          {/* Clipped to its own frame so the cards deal within the column
+              rather than sweeping across the copy beside them. The card
+              already clips its own contents, so this only bounds the swap. */}
+          <div className="vs-card relative overflow-hidden rounded-[24px]">
+            {view.from !== null && (
+              <div
+                ref={leavingRef}
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-0"
+              >
+                <DimensionCard data={scoreDimensions[view.from]} />
+              </div>
+            )}
+            <div ref={cardRef} className="relative">
+              <DimensionCard data={dimension} />
+            </div>
           </div>
         </div>
 

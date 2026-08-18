@@ -125,50 +125,52 @@ function MetodoSection() {
         // exactly "fully framed" is unreliable against the virtual scroll's
         // eased settle. The ScrollTrigger fallback below covers reaching
         // this section any other way.
+        // Every group starts together at position 0. The sequence used to
+        // chain heading → paragraph → divider → cards, which read as slow
+        // because the last card only began once everything before it had
+        // finished. Staggers are kept inside each group so the section still
+        // resolves with texture rather than as one flat pop.
         const tl = gsap.timeline({ paused: true });
-        // Plays back 1.5x — speeds up the whole sequence uniformly without
-        // having to rescale every duration/stagger/overlap offset below.
-        tl.timeScale(1.5);
 
-        titleSplits.forEach((split, index) => {
+        titleSplits.forEach((split) => {
           tl.to(
             split.words,
             { y: 0, opacity: 1, stagger: 0.03, duration: 0.5, ease: "power2.out" },
-            index === 0 ? 0 : "-=0.25"
+            0
           );
         });
 
-        paraSplits.forEach((split, index) => {
+        paraSplits.forEach((split) => {
           tl.to(
             split.words,
-            { y: 0, opacity: 1, stagger: 0.014, duration: 0.4, ease: "power2.out" },
-            index === 0 ? "-=0.15" : "-=0.25"
+            { y: 0, opacity: 1, stagger: 0.014, duration: 0.45, ease: "power2.out" },
+            0
           );
         });
 
-        tl.to(divider, { scaleX: 1, duration: 0.5, ease: "power2.inOut" }, "-=0.1");
+        tl.to(divider, { scaleX: 1, duration: 0.5, ease: "power2.inOut" }, 0);
 
-        // Each card: slides in from the right while fading in, then its
-        // own internals settle — title drops in, the dash draws in from
-        // the right, and the body's skeleton lines sweep across.
+        // Cards enter as one group. Each still runs its own internal
+        // choreography — title drops in, the dash draws from the right, the
+        // body's skeleton lines sweep across — but all three begin at once.
         cards.forEach((card, index) => {
           const items = bodyOverlays[index];
           const cardTl = gsap.timeline();
 
-          cardTl.to(card, { x: 0, opacity: 1, duration: 0.35, ease: "power2.out" }, 0);
+          cardTl.to(card, { x: 0, opacity: 1, duration: 0.45, ease: "power2.out" }, 0);
           cardTl.to(
             cardTitles[index],
-            { y: 0, opacity: 1, duration: 0.25, ease: "power2.out" },
-            0.1
+            { y: 0, opacity: 1, duration: 0.35, ease: "power2.out" },
+            0
           );
           cardTl.to(
             cardDashes[index],
-            { scaleX: 1, duration: 0.18, ease: "power2.out" },
-            0.18
+            { scaleX: 1, duration: 0.25, ease: "power2.out" },
+            0.08
           );
 
           items.forEach((overlay, lineIndex) => {
-            const lineStart = 0.2 + lineIndex * 0.05;
+            const lineStart = 0.12 + lineIndex * 0.045;
             cardTl
               .to(overlay, { scaleX: 1, duration: 0.14, ease: "power1.out" }, lineStart)
               .set(overlay, { transformOrigin: "right" })
@@ -177,11 +179,11 @@ function MetodoSection() {
 
           cardTl.to(
             cardMetas[index],
-            { y: 0, opacity: 1, duration: 0.22, ease: "power2.out" },
-            "-=0.08"
+            { y: 0, opacity: 1, duration: 0.3, ease: "power2.out" },
+            0.14
           );
 
-          tl.add(cardTl, index === 0 ? "-=0.15" : "<+=0.12");
+          tl.add(cardTl, 0);
         });
 
         const play = () => tl.play();
