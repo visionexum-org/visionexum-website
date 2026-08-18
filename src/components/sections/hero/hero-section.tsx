@@ -1,14 +1,91 @@
+"use client";
+
+import { useRef } from "react";
+import { useGSAP } from "@gsap/react";
+
+import { gsap, SplitText } from "@/lib/gsap";
 import { SectionContainer } from "@/components/shared/section-container";
 import { HeroBackground } from "@/components/sections/hero/hero-background";
 import { HeroContent } from "@/components/sections/hero/hero-content";
 import { HeroCards } from "@/components/sections/hero/hero-cards";
 
-// The entrance for everything in here is driven by HeroIntro, which owns the
-// single reveal timeline shared with the preloader.
 function HeroSection() {
+  const sectionRef = useRef<HTMLElement>(null);
+
+  useGSAP(
+    () => {
+      const mm = gsap.matchMedia();
+
+      mm.add(
+        {
+          isDesktopMotion:
+            "(min-width: 1024px) and (prefers-reduced-motion: no-preference)",
+          isReducedOrMobile:
+            "(max-width: 1023px), (prefers-reduced-motion: reduce)",
+        },
+        (context) => {
+          const { isDesktopMotion } = context.conditions as {
+            isDesktopMotion: boolean;
+          };
+
+          if (!isDesktopMotion) {
+            gsap.set(
+              [".hero-bg", ".hero-heading", ".hero-cta-item", ".hero-card"],
+              { clearProps: "all" }
+            );
+            return;
+          }
+
+          const heading = sectionRef.current?.querySelector<HTMLElement>(
+            ".hero-heading"
+          );
+          const split = heading
+            ? SplitText.create(heading, {
+                type: "lines",
+                mask: "lines",
+                linesClass: "hero-heading-line",
+              })
+            : null;
+
+          const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
+
+          tl.from(".hero-bg", { opacity: 0, scale: 1.06, duration: 1.2 })
+            .from(
+              ".hero-heading-line",
+              { yPercent: 110, opacity: 0, duration: 0.9, stagger: 0.12 },
+              "-=0.7"
+            )
+            .from(
+              ".hero-cta-item",
+              { y: 16, opacity: 0, duration: 0.6, stagger: 0.1 },
+              "-=0.4"
+            )
+            .from(
+              ".hero-card",
+              // opacity 0.001, not 0: at exactly 0, Chromium drops the
+              // element's compositing layer entirely, so the backdrop-blur
+              // child has to be recomposited from scratch as it fades back
+              // in — a visible beat behind the rest of the entrance.
+              { y: 32, opacity: 0.001, duration: 0.8, stagger: 0.12 },
+              "-=0.5"
+            );
+
+          return () => {
+            tl.kill();
+            split?.revert();
+          };
+        }
+      );
+
+      return () => mm.revert();
+    },
+    { scope: sectionRef }
+  );
+
   return (
     <section
       id="home"
+      ref={sectionRef}
       className="relative flex min-h-[950px] flex-col justify-center overflow-hidden rounded-b-[32px] bg-navy pt-36 pb-20 lg:min-h-screen lg:pt-40 lg:pb-24"
     >
       <HeroBackground />

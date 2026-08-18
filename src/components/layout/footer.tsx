@@ -157,7 +157,7 @@ function Footer() {
             reservados.
           </p>
           <a
-            href="#"
+            href="/privacidade"
             className="font-sans text-sm text-white/70 transition-colors hover:text-white"
           >
             Política de Privacidade

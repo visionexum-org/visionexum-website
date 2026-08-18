@@ -85,16 +85,6 @@ export default async function RootLayout({
           className="pointer-events-none fixed top-0 left-0 size-px overflow-hidden"
           style={{ backdropFilter: "blur(16px)", WebkitBackdropFilter: "blur(16px)" }}
         />
-        {/* Runs synchronously before hydration: applying overflow:hidden
-            here, not in the virtual-scroll effect, avoids a layout reflow
-            landing mid-animation and invalidating the hero cards'
-            backdrop-blur compositing layer as they fade in. */}
-        <script
-          nonce={nonce ?? undefined}
-          dangerouslySetInnerHTML={{
-            __html: "document.body.classList.add('virtual-scroll-active')",
-          }}
-        />
         <CustomCursor />
         {children}
       </body>
