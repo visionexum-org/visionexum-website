@@ -1,17 +1,11 @@
-// Identificação legal do responsável pelo tratamento.
-//
-// PENDENTE: os campos marcados com PLACEHOLDER têm de ser preenchidos com os
-// dados reais da empresa antes de divulgar o site. A Lei n.º 22/11 exige que
-// o titular dos dados saiba exactamente quem trata a sua informação e como o
-// contactar — sem estes campos a política está legalmente incompleta.
-export const PLACEHOLDER = "(a preencher)";
-
+// Identificação legal do responsável pelo tratamento, exigida pela Lei
+// n.º 22/11 para que o titular saiba quem trata os seus dados e como o
+// contactar para exercer os seus direitos.
 export const controlador = {
-  denominacao: PLACEHOLDER,
-  nif: PLACEHOLDER,
-  morada: PLACEHOLDER,
-  emailPrivacidade: PLACEHOLDER,
-  telefone: PLACEHOLDER,
+  denominacao: "Visio Nexum Prestação de Serviços, LDA.",
+  nif: "5002752670",
+  emailPrivacidade: "geral@visionexum.com",
+  telefone: "+244 932 687 228",
 };
 
 export const ultimaActualizacao = "18 de Agosto de 2026";

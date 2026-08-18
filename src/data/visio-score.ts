@@ -18,7 +18,6 @@ export type ScoreZoneData = {
   description: string;
 };
 
-// MOCK — conteúdo placeholder, a substituir por conteúdo real do cliente.
 export const scoreDimensions: ScoreDimensionData[] = [
   {
     eyebrow: "Dimensão 1 - 25 pts",

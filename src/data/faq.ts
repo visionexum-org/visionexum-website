@@ -3,7 +3,6 @@ export type FaqItemData = {
   answer: string;
 };
 
-// MOCK — conteúdo placeholder, a substituir por conteúdo real do cliente.
 export const faqItems: FaqItemData[] = [
   {
     question:

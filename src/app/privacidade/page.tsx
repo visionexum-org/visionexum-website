@@ -85,16 +85,26 @@ export default function PrivacidadePage() {
                   <dd>{controlador.nif}</dd>
                 </div>
                 <div className="flex flex-wrap gap-x-2">
-                  <dt className="text-white/50">Morada:</dt>
-                  <dd>{controlador.morada}</dd>
-                </div>
-                <div className="flex flex-wrap gap-x-2">
                   <dt className="text-white/50">E-mail:</dt>
-                  <dd>{controlador.emailPrivacidade}</dd>
+                  <dd>
+                    <a
+                      href={`mailto:${controlador.emailPrivacidade}`}
+                      className="underline underline-offset-2 transition-colors hover:text-white"
+                    >
+                      {controlador.emailPrivacidade}
+                    </a>
+                  </dd>
                 </div>
                 <div className="flex flex-wrap gap-x-2">
                   <dt className="text-white/50">Telefone:</dt>
-                  <dd>{controlador.telefone}</dd>
+                  <dd>
+                    <a
+                      href={`tel:${controlador.telefone.replace(/\s/g, "")}`}
+                      className="underline underline-offset-2 transition-colors hover:text-white"
+                    >
+                      {controlador.telefone}
+                    </a>
+                  </dd>
                 </div>
               </dl>
             </div>
@@ -217,10 +227,15 @@ export default function PrivacidadePage() {
             </p>
             <p>
               Para exercer qualquer destes direitos, escreva-nos para{" "}
-              {controlador.emailPrivacidade}. Responderemos com a maior brevidade
-              possível. Caso considere que os seus direitos não foram
-              respeitados, pode apresentar reclamação junto da Agência de
-              Protecção de Dados (APD) de Angola.
+              <a
+                href={`mailto:${controlador.emailPrivacidade}`}
+                className="text-white underline underline-offset-2"
+              >
+                {controlador.emailPrivacidade}
+              </a>
+              . Responderemos com a maior brevidade possível. Caso considere que
+              os seus direitos não foram respeitados, pode apresentar reclamação
+              junto da Agência de Protecção de Dados (APD) de Angola.
             </p>
           </Section>
 
@@ -262,7 +277,13 @@ export default function PrivacidadePage() {
             <p>
               Para qualquer questão sobre esta política ou sobre o tratamento
               dos seus dados, contacte-nos através de{" "}
-              {controlador.emailPrivacidade}.
+              <a
+                href={`mailto:${controlador.emailPrivacidade}`}
+                className="text-white underline underline-offset-2"
+              >
+                {controlador.emailPrivacidade}
+              </a>
+              .
             </p>
           </Section>
         </div>
