@@ -20,19 +20,13 @@ function GlassCard({
   ...props
 }: React.ComponentProps<"div"> & { tint?: string; bordered?: boolean }) {
   return (
-    <div
-      className={cn("relative rounded-3xl will-change-transform", className)}
-      style={{ WebkitBackfaceVisibility: "hidden", backfaceVisibility: "hidden" }}
-      {...props}
-    >
+    <div className={cn("relative rounded-3xl will-change-transform", className)} {...props}>
       <div
         className={cn("h-full w-full rounded-3xl backdrop-blur-lg", tint)}
         style={{
           willChange: "backdrop-filter",
           transform: "translateZ(0)",
           isolation: "isolate",
-          WebkitBackfaceVisibility: "hidden",
-          backfaceVisibility: "hidden",
         }}
       >
         {children}

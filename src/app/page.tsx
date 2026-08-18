@@ -1,6 +1,7 @@
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 import { VirtualScroll } from "@/components/shared/virtual-scroll";
+import { HeroIntro } from "@/components/shared/hero-intro";
 import { HeroSection } from "@/components/sections/hero/hero-section";
 import { ManifestoSection } from "@/components/sections/manifesto/manifesto-section";
 import { SobreNosSection } from "@/components/sections/sobre-nos/sobre-nos-section";
@@ -27,6 +28,7 @@ export default function Home() {
         </main>
         <Footer />
       </VirtualScroll>
+      <HeroIntro />
     </>
   );
 }
