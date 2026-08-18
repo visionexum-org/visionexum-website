@@ -4,14 +4,12 @@ import { useEffect, useRef } from "react";
 
 type CursorMode = "free" | "button" | "text";
 
-const BASE = {
-  free: { width: 16, height: 16, radius: 8 },
-  button: { width: 64, height: 64, radius: 32 },
-  text: { width: 3, height: 28, radius: 1.5 },
-} as const;
-
 const SPRING_STIFFNESS = 220;
 const SPRING_DAMPING = 24;
+
+// Dipped on every mode change, then sprung back to 1 so the shape swap
+// registers as a deliberate beat rather than a hard cut.
+const MODE_CHANGE_SCALE = 0.84;
 
 function stepSpring(
   current: number,
@@ -26,13 +24,21 @@ function stepSpring(
 }
 
 function CustomCursor() {
-  const elRef = useRef<HTMLDivElement>(null);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const arrowRef = useRef<SVGSVGElement>(null);
+  const handRef = useRef<SVGSVGElement>(null);
+  const beamRef = useRef<SVGSVGElement>(null);
 
   useEffect(() => {
     if (!window.matchMedia("(pointer: fine)").matches) return;
 
-    const el = elRef.current;
-    if (!el) return;
+    const root = rootRef.current;
+    const shapes = {
+      free: arrowRef.current,
+      button: handRef.current,
+      text: beamRef.current,
+    };
+    if (!root || !shapes.free || !shapes.button || !shapes.text) return;
 
     const reduceMotionQuery = window.matchMedia(
       "(prefers-reduced-motion: reduce)"
@@ -51,20 +57,11 @@ function CustomCursor() {
     let x = targetX;
     let y = targetY;
 
-    let lastPointerX = targetX;
-    let lastPointerY = targetY;
-    let lastPointerAt = performance.now();
-    let velocityX = 0;
-    let velocityY = 0;
-
     let mode: CursorMode = "free";
-
-    let width: number = BASE.free.width;
-    let height: number = BASE.free.height;
-    let radius: number = BASE.free.radius;
-    let widthVel = 0;
-    let heightVel = 0;
-    let radiusVel = 0;
+    let scale = 1;
+    let scaleVel = 0;
+    const opacity: Record<CursorMode, number> = { free: 1, button: 0, text: 0 };
+    const opacityVel: Record<CursorMode, number> = { free: 0, button: 0, text: 0 };
 
     let lastTimestamp = performance.now();
     let rafId = 0;
@@ -86,21 +83,20 @@ function CustomCursor() {
         hasMoved = true;
         x = e.clientX;
         y = e.clientY;
-        el.style.opacity = "1";
+        root.style.opacity = "1";
       }
 
       targetX = e.clientX;
       targetY = e.clientY;
 
-      const now = performance.now();
-      const dt = Math.max(8, now - lastPointerAt);
-      velocityX = ((e.clientX - lastPointerX) / dt) * 16.667;
-      velocityY = ((e.clientY - lastPointerY) / dt) * 16.667;
-      lastPointerX = e.clientX;
-      lastPointerY = e.clientY;
-      lastPointerAt = now;
-
-      mode = resolveMode(e.target);
+      const nextMode = resolveMode(e.target);
+      if (nextMode !== mode) {
+        mode = nextMode;
+        if (!reduceMotion) {
+          scale = MODE_CHANGE_SCALE;
+          scaleVel = 0;
+        }
+      }
     };
 
     const startLoop = () => {
@@ -116,12 +112,12 @@ function CustomCursor() {
     };
 
     const handlePointerLeaveViewport = () => {
-      el.style.opacity = "0";
+      root.style.opacity = "0";
       stopLoop();
     };
 
     const handlePointerEnterViewport = () => {
-      if (hasMoved) el.style.opacity = "1";
+      if (hasMoved) root.style.opacity = "1";
       startLoop();
     };
 
@@ -145,48 +141,36 @@ function CustomCursor() {
       if (reduceMotion) {
         x = targetX;
         y = targetY;
-        velocityX = 0;
-        velocityY = 0;
       } else {
         const factor = 1 - Math.pow(0.72, dt / 16.667);
         x += (targetX - x) * factor;
         y += (targetY - y) * factor;
-
-        const decay = Math.pow(0.9, dt / 16.667);
-        velocityX *= decay;
-        velocityY *= decay;
       }
 
-      const base = BASE[mode];
-      let targetWidth: number = base.width;
-      let targetHeight: number = base.height;
-      const targetRadius: number = base.radius;
-
-      if (mode === "free" && !reduceMotion) {
-        const speed = Math.min(280, Math.hypot(velocityX, velocityY));
-        const stretch = Math.min(1.12, speed / 72);
-        const ratioX =
-          Math.abs(velocityX) / (Math.abs(velocityX) + Math.abs(velocityY) + 0.001);
-        const ratioY = 1 - ratioX;
-        targetWidth = base.width * (1 + stretch * 1.18 * ratioX - stretch * 0.78 * ratioY);
-        targetHeight = base.height * (1 + stretch * 1.18 * ratioY - stretch * 0.78 * ratioX);
-      }
+      const dtSec = Math.min(0.032, dt / 1000);
 
       if (reduceMotion) {
-        width = targetWidth;
-        height = targetHeight;
-        radius = targetRadius;
+        scale = 1;
       } else {
-        const dtSec = Math.min(0.032, dt / 1000);
-        [width, widthVel] = stepSpring(width, widthVel, targetWidth, dtSec);
-        [height, heightVel] = stepSpring(height, heightVel, targetHeight, dtSec);
-        [radius, radiusVel] = stepSpring(radius, radiusVel, targetRadius, dtSec);
+        [scale, scaleVel] = stepSpring(scale, scaleVel, 1, dtSec);
       }
 
-      el.style.transform = `translate3d(${(x - width / 2).toFixed(2)}px, ${(y - height / 2).toFixed(2)}px, 0)`;
-      el.style.width = `${width.toFixed(2)}px`;
-      el.style.height = `${height.toFixed(2)}px`;
-      el.style.borderRadius = `${radius.toFixed(2)}px`;
+      (Object.keys(shapes) as CursorMode[]).forEach((key) => {
+        const target = key === mode ? 1 : 0;
+        if (reduceMotion) {
+          opacity[key] = target;
+        } else {
+          [opacity[key], opacityVel[key]] = stepSpring(
+            opacity[key],
+            opacityVel[key],
+            target,
+            dtSec
+          );
+        }
+        shapes[key]!.style.opacity = opacity[key].toFixed(3);
+      });
+
+      root.style.transform = `translate3d(${x.toFixed(2)}px, ${y.toFixed(2)}px, 0) scale(${scale.toFixed(3)})`;
 
       if (running) {
         rafId = requestAnimationFrame(tick);
@@ -206,13 +190,74 @@ function CustomCursor() {
     };
   }, []);
 
+  // Each shape is offset so its own hotspot lands on the container origin,
+  // which keeps the animation loop free of per-mode positioning maths. The
+  // navy outline is what a solid fill needs to stay legible over both the
+  // navy and the cream sections, now that mix-blend-difference is gone.
   return (
     <div
-      ref={elRef}
+      ref={rootRef}
       aria-hidden="true"
-      className="pointer-events-none fixed top-0 left-0 z-999 bg-white mix-blend-difference will-change-transform"
+      className="pointer-events-none fixed top-0 left-0 z-999 will-change-transform"
       style={{ opacity: 0 }}
-    />
+    >
+      <svg
+        ref={arrowRef}
+        width="17"
+        height="22"
+        viewBox="0 0 17 22"
+        fill="none"
+        className="absolute top-0 left-0"
+        style={{ transform: "translate(-1.5px, -1.5px)" }}
+      >
+        <path
+          d="M1.5 1.5V17.4L6 13.6L8.7 20L11.6 18.8L8.9 12.6L14.6 12.3Z"
+          className="fill-white stroke-navy"
+          strokeWidth="1.6"
+          strokeLinejoin="round"
+        />
+      </svg>
+
+      <svg
+        ref={handRef}
+        width="24"
+        height="27"
+        viewBox="0 0 24 27"
+        fill="none"
+        className="absolute top-0 left-0"
+        style={{ transform: "translate(-7px, -1.5px)" }}
+      >
+        <path
+          d="M7.4 13.2V4.1a1.8 1.8 0 0 1 3.6 0v6.6V9.2a1.7 1.7 0 0 1 3.4 0v1.6a1.7 1.7 0 0 1 3.4 0v1.2a1.7 1.7 0 0 1 3.4 0v4.9c0 4-2.7 6.9-6.7 6.9h-2.2c-2.3 0-3.8-.9-5.1-2.7l-4.3-6a1.8 1.8 0 0 1 2.7-2.3z"
+          className="fill-white stroke-navy"
+          strokeWidth="1.6"
+          strokeLinejoin="round"
+        />
+      </svg>
+
+      <svg
+        ref={beamRef}
+        width="12"
+        height="26"
+        viewBox="0 0 12 26"
+        fill="none"
+        className="absolute top-0 left-0"
+        style={{ transform: "translate(-6px, -13px)" }}
+      >
+        <path
+          d="M3 3h6M6 3v20M3 23h6"
+          className="stroke-navy"
+          strokeWidth="4.2"
+          strokeLinecap="round"
+        />
+        <path
+          d="M3 3h6M6 3v20M3 23h6"
+          className="stroke-white"
+          strokeWidth="1.7"
+          strokeLinecap="round"
+        />
+      </svg>
+    </div>
   );
 }
 
