@@ -82,11 +82,16 @@ function HeroSection() {
     { scope: sectionRef }
   );
 
+  // Mobile anchors its content to the bottom of one viewport rather than
+  // centring it inside a fixed 950px box: that box was taller than a phone
+  // screen, so it opened a dead band between the navbar and the heading and
+  // pushed the second card out of view. min-h-dvh is a floor, so the section
+  // still grows if the content needs more room than that.
   return (
     <section
       id="home"
       ref={sectionRef}
-      className="relative flex min-h-[950px] flex-col justify-center overflow-hidden rounded-b-[32px] bg-navy pt-36 pb-20 lg:min-h-screen lg:pt-40 lg:pb-24"
+      className="relative flex min-h-dvh flex-col justify-end overflow-hidden rounded-b-[32px] bg-navy pt-28 pb-12 lg:min-h-screen lg:justify-center lg:pt-40 lg:pb-24"
     >
       <HeroBackground />
 

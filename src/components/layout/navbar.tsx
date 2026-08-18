@@ -10,6 +10,7 @@ import { navLinks } from "@/data/navigation";
 import { ButtonLink } from "@/components/ui/button";
 import { Logo } from "@/components/shared/logo";
 import { SectionContainer } from "@/components/shared/section-container";
+import { ArrowUpRight } from "@/components/shared/icons";
 
 const diagnosticoClassName = "border-navy bg-lavender text-navy hover:bg-lavender/80";
 
@@ -119,7 +120,7 @@ function Navbar() {
             size="pill"
             className={cn(diagnosticoClassName, "text-sm")}
           >
-            Diagnóstico ↗
+            Diagnóstico <ArrowUpRight className="size-3" />
           </ButtonLink>
         </div>
 
@@ -161,7 +162,7 @@ function Navbar() {
               className={cn("mt-2 w-full text-sm", diagnosticoClassName)}
               onClick={() => setIsMenuOpen(false)}
             >
-              Diagnóstico ↗
+              Diagnóstico <ArrowUpRight className="size-3" />
             </ButtonLink>
           </SectionContainer>
         </div>

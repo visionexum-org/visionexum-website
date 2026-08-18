@@ -79,7 +79,7 @@ function Footer() {
 
   return (
     <footer ref={footerRef} className="bg-cream pt-4 lg:pt-8">
-      <div className="relative overflow-hidden rounded-t-[16px] bg-black px-8 py-12 lg:px-16 lg:py-14">
+      <div className="relative overflow-hidden bg-black px-8 py-12 lg:px-16 lg:py-14">
         {allowMotion && (
           <div aria-hidden="true" className="pointer-events-none absolute inset-0">
             <ColorBends

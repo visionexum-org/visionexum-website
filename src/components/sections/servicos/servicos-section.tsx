@@ -11,6 +11,7 @@ import { ButtonLink } from "@/components/ui/button";
 import { serviceSteps } from "@/data/servicos";
 import { ServiceCard } from "@/components/sections/servicos/service-card";
 import { ServicosStaircase } from "@/components/sections/servicos/servicos-staircase";
+import { ArrowUpRight } from "@/components/shared/icons";
 
 type Connector = { d: string; head: string };
 
@@ -423,7 +424,7 @@ function ServicosSection() {
             size="pill"
             className="servicos-cta-button mt-4 border-navy bg-lavender text-navy hover:bg-lavender/80"
           >
-            Diagnóstico ↗
+            Diagnóstico <ArrowUpRight className="size-3" />
           </ButtonLink>
         </div>
       </SectionContainer>

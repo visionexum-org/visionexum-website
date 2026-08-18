@@ -10,6 +10,7 @@ import { ButtonLink } from "@/components/ui/button";
 import { scoreDimensions, scoreZones } from "@/data/visio-score";
 import { DimensionCard } from "@/components/sections/visio-score/dimension-card";
 import { ScoreZoneCard } from "@/components/sections/visio-score/score-zone-card";
+import { ArrowUpRight } from "@/components/shared/icons";
 
 const [zone0, zone1, zone2, zone3] = scoreZones;
 const AUTO_ADVANCE_MS = 6000;
@@ -301,7 +302,7 @@ function VisioScoreSection() {
               size="pill"
               className="mt-4 border-navy bg-lavender text-navy hover:bg-lavender/80"
             >
-              Diagnóstico ↗
+              Diagnóstico <ArrowUpRight className="size-3" />
             </ButtonLink>
           </div>
         </div>

@@ -4,6 +4,7 @@ import { useState } from "react";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { ArrowUpRight } from "@/components/shared/icons";
 
 export type LeadFormState = {
   nome: string;
@@ -181,7 +182,7 @@ function LeadStep({
         size="pill"
         className="mt-8 self-start"
       >
-        Continuar para agendamento ↗
+        Continuar para agendamento <ArrowUpRight className="size-3" />
       </Button>
     </form>
   );

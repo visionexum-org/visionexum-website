@@ -12,6 +12,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { CircleCheckIcon } from "lucide-react";
 import { pt } from "date-fns/locale";
+import { ArrowUpRight } from "@/components/shared/icons";
 
 const timeSlots = Array.from({ length: 33 }, (_, i) => {
   const totalMinutes = i * 15;
@@ -120,7 +121,13 @@ function BookingStep({
           disabled={!date || !selectedTime || isSubmitting}
           onClick={onConfirm}
         >
-          {isSubmitting ? "A enviar…" : "Confirmar reunião ↗"}
+          {isSubmitting ? (
+            "A enviar…"
+          ) : (
+            <>
+              Confirmar reunião <ArrowUpRight className="size-3" />
+            </>
+          )}
         </Button>
       </div>
     </div>

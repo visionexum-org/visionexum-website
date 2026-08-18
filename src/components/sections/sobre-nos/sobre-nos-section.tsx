@@ -180,11 +180,20 @@ function SobreNosSection() {
         // here — snapping the scroll so it lands fully framed before its
         // own entrance plays.
         const content = gsap.utils.toArray<HTMLElement>(".sobre-nos-content")[0];
+        // Anchored to the section's own bottom, not the viewport. The old
+        // "top top" → "top -60%" measured 60vh of scroll from the moment the
+        // section's top touched the viewport top, which is the same thing only
+        // while the section is exactly one viewport tall. On a phone the cards
+        // stack and the section runs far taller, so that window expired around
+        // the third card and the fade — and the snap to método — fired while
+        // there was still content to read. Bottom-anchored, the exit covers
+        // the same 60vh but only once the whole section has been seen, and it
+        // collapses back to the identical desktop behaviour.
         const exitTl = gsap.timeline({
           scrollTrigger: {
             trigger: sectionRef.current,
-            start: "top top",
-            end: "top -60%",
+            start: "bottom bottom",
+            end: "bottom 40%",
             scrub: true,
             onLeave: () => {
               const metodo = document.getElementById("metodo");

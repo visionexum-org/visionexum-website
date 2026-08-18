@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
-// Content-Security-Policy is set per-request in src/middleware.ts instead —
-// it needs a fresh nonce every time, which this static config can't provide.
+// Content-Security-Policy is set per-request in src/proxy.ts instead — it
+// needs a fresh nonce every time, which this static config can't provide.
 const SECURITY_HEADERS = [
   { key: "X-Content-Type-Options", value: "nosniff" },
   { key: "X-Frame-Options", value: "DENY" },

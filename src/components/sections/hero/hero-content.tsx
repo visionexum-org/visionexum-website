@@ -1,4 +1,5 @@
 import { ButtonLink } from "@/components/ui/button";
+import { ArrowUpRight } from "@/components/shared/icons";
 
 // On mobile this sits in normal flow, stacked above the cards. At lg+ it
 // switches to absolute positioning within the section's 1728px content
@@ -21,7 +22,7 @@ function HeroContent() {
           size="pill"
           className="hero-cta-item text-sm"
         >
-          Diagnóstico ↗
+          Diagnóstico <ArrowUpRight className="size-3" />
         </ButtonLink>
         <ButtonLink
           href="#metodo"
@@ -29,7 +30,7 @@ function HeroContent() {
           size="pill"
           className="hero-cta-item text-sm"
         >
-          Método ↗
+          Método <ArrowUpRight className="size-3" />
         </ButtonLink>
       </div>
     </div>
