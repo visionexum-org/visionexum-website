@@ -30,12 +30,15 @@ function HeroSection() {
 
           if (!isDesktopMotion) {
             gsap.set(
-              [".hero-bg", ".hero-heading", ".hero-cta-item", ".hero-card"],
+              [".hero-intro-overlay", ".hero-bg", ".hero-heading", ".hero-cta-item", ".hero-card"],
               { clearProps: "all" }
             );
             return;
           }
 
+          const overlay = sectionRef.current?.querySelector<HTMLElement>(
+            ".hero-intro-overlay"
+          );
           const heading = sectionRef.current?.querySelector<HTMLElement>(
             ".hero-heading"
           );
@@ -47,27 +50,44 @@ function HeroSection() {
               })
             : null;
 
-          const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
+          const tl = gsap.timeline({ delay: 0.2 });
 
-          tl.from(".hero-bg", { opacity: 0, scale: 1.06, duration: 1.2 })
+          // Intro: white overlay fades, circular mask expands from center revealing background
+          tl.to(".hero-intro-overlay", { opacity: 0, duration: 0.5, ease: "power2.inOut" })
+            .to(
+              ".hero-intro-reveal",
+              {
+                scale: 4,
+                duration: 1.2,
+                ease: "power3.out",
+              },
+              "<"
+            )
+            .to(
+              ".hero-intro-reveal",
+              { opacity: 0, duration: 0.4, pointerEvents: "none" },
+              "-=0.3"
+            )
+            // Elements fade in as mask expands
+            .from(
+              ".hero-bg",
+              { opacity: 0, scale: 1.05, duration: 0.8 },
+              0
+            )
             .from(
               ".hero-heading-line",
-              { yPercent: 110, opacity: 0, duration: 0.9, stagger: 0.12 },
-              "-=0.7"
+              { yPercent: 110, opacity: 0, duration: 0.7, stagger: 0.08 },
+              0.3
             )
             .from(
               ".hero-cta-item",
-              { y: 16, opacity: 0, duration: 0.6, stagger: 0.1 },
-              "-=0.4"
+              { y: 16, opacity: 0, duration: 0.5, stagger: 0.08 },
+              0.5
             )
             .from(
               ".hero-card",
-              // opacity 0.001, not 0: at exactly 0, Chromium drops the
-              // element's compositing layer entirely, so the backdrop-blur
-              // child has to be recomposited from scratch as it fades back
-              // in — a visible beat behind the rest of the entrance.
-              { y: 32, opacity: 0.001, duration: 0.8, stagger: 0.12 },
-              "-=0.5"
+              { y: 32, opacity: 0.001, duration: 0.6, stagger: 0.1 },
+              0.65
             );
 
           return () => {
@@ -88,6 +108,20 @@ function HeroSection() {
       ref={sectionRef}
       className="relative flex min-h-[950px] flex-col justify-center overflow-hidden rounded-b-[32px] bg-navy pt-36 pb-20 lg:min-h-screen lg:pt-40 lg:pb-24"
     >
+      <div
+        className="hero-intro-overlay pointer-events-none fixed inset-0 z-50 bg-white"
+        aria-hidden="true"
+      />
+      <div
+        className="hero-intro-reveal pointer-events-none fixed inset-0 z-50 bg-navy"
+        style={{
+          borderRadius: "50%",
+          transform: "scale(0)",
+          transformOrigin: "center center",
+        }}
+        aria-hidden="true"
+      />
+
       <HeroBackground />
 
       {/* Hero's own 1920px reference canvas (1728px content, 96px
