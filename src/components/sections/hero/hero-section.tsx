@@ -30,7 +30,7 @@ function HeroSection() {
 
           if (!isDesktopMotion) {
             gsap.set(
-              [".hero-bg", ".hero-heading", ".hero-subtext", ".hero-cta-item", ".hero-card"],
+              [".hero-bg", ".hero-heading", ".hero-cta-item", ".hero-card"],
               { clearProps: "all" }
             );
             return;
@@ -55,7 +55,6 @@ function HeroSection() {
               { yPercent: 110, opacity: 0, duration: 0.9, stagger: 0.12 },
               "-=0.7"
             )
-            .from(".hero-subtext", { y: 20, opacity: 0, duration: 0.7 }, "-=0.5")
             .from(
               ".hero-cta-item",
               { y: 16, opacity: 0, duration: 0.6, stagger: 0.1 },
@@ -63,7 +62,11 @@ function HeroSection() {
             )
             .from(
               ".hero-card",
-              { y: 32, opacity: 0, duration: 0.8, stagger: 0.12 },
+              // opacity 0.001, not 0: at exactly 0, Chromium drops the
+              // element's compositing layer entirely, so the backdrop-blur
+              // child has to be recomposited from scratch as it fades back
+              // in — a visible beat behind the rest of the entrance.
+              { y: 32, opacity: 0.001, duration: 0.8, stagger: 0.12 },
               "-=0.5"
             );
 
@@ -83,12 +86,25 @@ function HeroSection() {
     <section
       id="home"
       ref={sectionRef}
-      className="relative min-h-[950px] overflow-hidden bg-navy pt-32 pb-20 lg:min-h-screen lg:pt-40"
+      className="relative flex min-h-[950px] flex-col justify-center overflow-hidden rounded-b-[32px] bg-navy pt-36 pb-20 lg:min-h-screen lg:pt-40 lg:pb-24"
     >
       <HeroBackground />
 
-      <SectionContainer className="relative z-10 grid grid-cols-1 items-center gap-16 lg:grid-cols-2 lg:gap-8">
+      {/* Hero's own 1920px reference canvas (1728px content, 96px
+          gutters), distinct from the sitewide 1440px canvas SectionContainer
+          uses elsewhere — both pieces below share max-w-480 so they align at
+          any viewport. No padding here: an absolutely positioned child
+          measures inset/left/right against the parent's padding box,
+          silently ignoring the parent's own padding, so HeroContent bakes
+          its 96px gutter into lg:left-24 instead. absolute+inset-0 only from
+          lg — below that this must stay in flow, or it stops contributing
+          height and HeroContent floats over the cards instead of stacking
+          above them. */}
+      <div className="relative z-10 mx-auto max-w-480 lg:absolute lg:inset-0">
         <HeroContent />
+      </div>
+
+      <SectionContainer className="relative z-10 max-w-480 px-6 lg:flex lg:justify-end lg:px-24">
         <HeroCards />
       </SectionContainer>
     </section>

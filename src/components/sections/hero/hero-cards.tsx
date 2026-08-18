@@ -1,163 +1,59 @@
-import Image from "next/image";
-
 import { GlassCard } from "@/components/shared/glass-card";
-import { heroCards } from "@/data/hero";
-import type {
-  ScoreBadgeCardData,
-  StatCardData,
-  TestimonialCardData,
-} from "@/data/hero";
+import { heroStat, heroScore } from "@/data/hero";
 
-const [statPrimary, statSecondary, scoreBadge, testimonial] = heroCards as [
-  StatCardData,
-  StatCardData,
-  ScoreBadgeCardData,
-  TestimonialCardData,
-];
+const cardTint = "bg-[#d4d4d4]/10";
 
-function StatBlock({ data }: { data: StatCardData }) {
+function StatCardContent() {
   return (
-    <div className="flex flex-col gap-2">
-      {data.eyebrow && (
-        <span className="text-xs text-white/70">{data.eyebrow}</span>
-      )}
-      <p className="font-sans text-[32px] leading-8 font-bold tracking-tight">
-        <span className="text-lavender">{data.value}</span>{" "}
-        <span className="text-sm font-medium text-white">
-          {data.valueSuffix}
+    <div className="flex h-full flex-col gap-3 p-5">
+      <div className="flex flex-col gap-1">
+        <span className="font-sans text-[11px] font-normal text-white/70">
+          {heroStat.eyebrow}
         </span>
-      </p>
-      <p className="max-w-[90%] text-xs leading-relaxed text-white/60">
-        {data.description}
-      </p>
-    </div>
-  );
-}
-
-function ScoreBadgeCardContent({ data }: { data: ScoreBadgeCardData }) {
-  return (
-    <div className="flex h-full flex-col justify-center gap-2 p-3.5">
-      <span className="text-sm text-navy">{data.label}</span>
-      <div className="grid grid-cols-[1fr_auto_1fr] items-end gap-x-2">
-        <div>
-          <p className="text-[10px] text-warm-gray">Antes</p>
-          <p className="text-sm font-semibold text-navy">{data.before}</p>
-        </div>
-        <span className="pb-0.5 text-gold">→</span>
-        <div>
-          <p className="text-[10px] text-warm-gray">Depois</p>
-          <p className="text-sm font-semibold text-navy">{data.after}</p>
-        </div>
+        <p>
+          <span className="font-sans text-[28px] leading-none font-bold text-white">
+            {heroStat.statValue}
+          </span>{" "}
+          <span className="font-sans text-xs font-normal text-white">
+            {heroStat.statSuffix}
+          </span>
+        </p>
       </div>
-      <span className="inline-flex w-fit items-center gap-1 text-xs font-medium text-gold">
-        <span className="size-1.5 rounded-full bg-gold" />
-        {data.delta}
-      </span>
-    </div>
-  );
-}
-
-function TestimonialCardContent({ data }: { data: TestimonialCardData }) {
-  return (
-    <div className="flex h-full flex-col justify-center gap-3 p-6">
-      <div className="flex items-center gap-3">
-        <Image
-          src={data.avatarSrc}
-          alt={data.name}
-          width={40}
-          height={40}
-          className="size-10 rounded-full object-cover"
-        />
-        <div>
-          <p className="text-sm font-semibold text-white">{data.name}</p>
-          <p className="text-xs text-white/60">{data.role}</p>
-        </div>
-      </div>
-      <p className="text-sm italic leading-relaxed text-white/75">
-        &ldquo;{data.quote}&rdquo;
+      <p className="font-sans text-[11px] leading-4 font-normal text-white/75">
+        {heroStat.description}
       </p>
     </div>
   );
 }
 
-function HeroCardsMobile() {
+function ScoreCardContent() {
   return (
-    <div className="flex flex-col gap-4 lg:hidden">
-      <GlassCard tint="bg-navy/70" className="hero-card">
-        <div className="p-5">
-          <StatBlock data={statPrimary} />
-        </div>
-      </GlassCard>
-      <GlassCard tint="bg-navy/70" className="hero-card">
-        <div className="p-5">
-          <StatBlock data={statSecondary} />
-        </div>
-      </GlassCard>
-      <div className="hero-card rounded-2xl bg-white">
-        <ScoreBadgeCardContent data={scoreBadge} />
+    <div className="flex h-full flex-col justify-between p-5">
+      <div className="flex flex-col gap-2">
+        <p className="font-sans text-lg font-bold text-gold">
+          {heroScore.heading}
+        </p>
+        <p className="font-sans text-[11px] leading-4 font-normal text-white/75">
+          {heroScore.description}
+        </p>
       </div>
-      <GlassCard tint="bg-navy/70" className="hero-card">
-        <TestimonialCardContent data={testimonial} />
-      </GlassCard>
-    </div>
-  );
-}
-
-function HeroCardsDesktop() {
-  return (
-    <div
-      className="relative hidden w-full max-w-95 lg:block"
-      style={{ aspectRatio: "379 / 422" }}
-    >
-      {/* Combined stat panel — traces public/images/hero-section/glass-card.svg
-          (a wide top card fused with a narrower bottom-left card). The svg
-          carries its own fill + gradient stroke; backdrop-blur is applied
-          here so it actually blurs the busy background behind it. */}
-      <div
-        className="hero-card absolute left-0 top-0 w-full"
-        style={{ aspectRatio: "380 / 280" }}
-      >
-        <Image
-          src="/images/hero-section/glass-card.svg"
-          alt=""
-          fill
-          className="pointer-events-none backdrop-blur-[17.5px]"
-        />
-        <div className="absolute inset-x-0 top-0 p-4" style={{ height: "54.3%" }}>
-          <StatBlock data={statPrimary} />
-        </div>
-        <div
-          className="absolute left-0 p-4"
-          style={{ width: "54.6%", top: "60%", bottom: 0 }}
-        >
-          <StatBlock data={statSecondary} />
-        </div>
-      </div>
-
-      <div
-        className="hero-card absolute overflow-hidden rounded-2xl bg-white"
-        style={{ left: "57.3%", top: "41.7%", width: "45.9%", height: "24.4%" }}
-      >
-        <ScoreBadgeCardContent data={scoreBadge} />
-      </div>
-
-      <GlassCard
-        tint="bg-navy/70"
-        className="hero-card absolute left-0 w-full"
-        style={{ top: "68.3%", height: "31.7%" }}
-      >
-        <TestimonialCardContent data={testimonial} />
-      </GlassCard>
+      <p className="text-right font-sans text-xs font-semibold text-gold">
+        {heroScore.cta}
+      </p>
     </div>
   );
 }
 
 function HeroCards() {
   return (
-    <>
-      <HeroCardsMobile />
-      <HeroCardsDesktop />
-    </>
+    <div className="flex w-full flex-col gap-5 lg:ml-auto lg:max-w-95">
+      <GlassCard tint={cardTint} bordered={false} className="hero-card h-42">
+        <StatCardContent />
+      </GlassCard>
+      <GlassCard tint={cardTint} bordered={false} className="hero-card h-[134px]">
+        <ScoreCardContent />
+      </GlassCard>
+    </div>
   );
 }
 

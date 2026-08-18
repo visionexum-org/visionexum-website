@@ -1,0 +1,17 @@
+body, html {
+	width:100%;
+	height:100dvh;
+	margin:0;
+	overflow:hidden;
+}
+.gradient {
+	width:100%;
+	aspect-ratio: 0.8;
+}
+
+.gradient img {
+	width:100%;
+	height:100%;
+	object-fit:cover;
+	object-position:center;
+}
