@@ -1,10 +1,17 @@
+import { cn } from "@/lib/utils";
 import type { ScoreZoneData } from "@/data/visio-score";
 
-// Neutral editorial tile: range + label at the top, description anchored to
-// the bottom so a row of tiles reads cleanly however long the copy runs.
+// Range + label at the top, description anchored to the bottom so a row of
+// tiles reads cleanly however long the copy runs. The fill carries the risk
+// reading, running from critical to healthy across the four zones.
 function ScoreZoneCard({ data }: { data: ScoreZoneData }) {
   return (
-    <div className="score-zone-card flex min-h-[240px] flex-col justify-between rounded-[20px] bg-cream-light p-6">
+    <div
+      className={cn(
+        "score-zone-card flex min-h-[240px] flex-col justify-between rounded-[20px] p-6",
+        data.toneClass
+      )}
+    >
       <div>
         <span className="font-heading text-[40px] leading-none font-normal text-navy">
           {data.range}

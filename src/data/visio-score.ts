@@ -16,6 +16,8 @@ export type ScoreZoneData = {
   range: string;
   label: string;
   description: string;
+  /** Tile background, read as a risk indicator from critical to healthy. */
+  toneClass: string;
 };
 
 export const scoreDimensions: ScoreDimensionData[] = [
@@ -91,23 +93,27 @@ export const scoreZones: ScoreZoneData[] = [
     label: "Risco activo",
     description:
       "Percepção desconexa com impacto imediato no negócio. Clientes saem sem explicar. Pressão constante de preço. Talento não chega.",
+    toneClass: "bg-[#FFE2E2]",
   },
   {
     range: "41–60",
     label: "Percepção frágil",
     description:
       "Base presente mas inconsistente. O mercado percebe o valor por vezes — mas não de forma previsível. O marketing tem retorno reduzido.",
+    toneClass: "bg-[#FFFCD8]",
   },
   {
     range: "61–80",
     label: "Em consolidação",
     description:
       "Boa base. A percepção é positiva mas ainda não é consistente em todas as dimensões. A orquestração contínua sustenta a evolução.",
+    toneClass: "bg-[#FFECC5]",
   },
   {
     range: "81–100",
     label: "Percepção sólida",
     description:
       "Referência de sector. O mercado percebe, sente e recomenda espontaneamente. Os clientes justificam o preço premium por iniciativa própria.",
+    toneClass: "bg-[#D8FFCE]",
   },
 ];

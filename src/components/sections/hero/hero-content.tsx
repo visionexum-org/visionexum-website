@@ -9,8 +9,8 @@ import { ArrowUpRight } from "@/components/shared/icons";
 // is free to change without breaking it.
 function HeroContent() {
   return (
-    <div className="relative z-10 mb-10 flex flex-col gap-6 px-6 lg:absolute lg:bottom-28.5 lg:left-24 lg:mb-0 lg:gap-6.5 lg:px-0">
-      <h1 className="hero-heading font-heading text-[24px] leading-[1.2] font-bold text-white lg:w-157.5">
+    <div className="relative z-10 flex flex-col gap-5 px-6 lg:absolute lg:bottom-28.5 lg:left-24 lg:gap-6.5 lg:px-0">
+      <h1 className="hero-heading font-heading text-[20px] leading-[1.25] font-bold text-white lg:w-157.5 lg:text-[24px] lg:leading-[1.2]">
         Ajudamos PMEs angolanas a transformar percepção numa vantagem
         estratégica mensurável — através do Visio Method™.
       </h1>

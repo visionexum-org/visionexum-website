@@ -109,7 +109,9 @@ function HeroSection() {
         <HeroContent />
       </div>
 
-      <SectionContainer className="relative z-10 max-w-480 px-6 lg:flex lg:justify-end lg:px-24">
+      {/* Desktop only: the mobile design is photo, heading and the two CTAs
+          over a single screen, with no glass cards. */}
+      <SectionContainer className="relative z-10 hidden max-w-480 px-6 lg:flex lg:justify-end lg:px-24">
         <HeroCards />
       </SectionContainer>
     </section>

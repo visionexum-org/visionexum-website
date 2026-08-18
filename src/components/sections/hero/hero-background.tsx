@@ -1,21 +1,37 @@
-import Image from "next/image";
+import { getImageProps } from "next/image";
+
+// Art direction rather than one image for both: the desktop photo is 2:1, and
+// covering a phone's portrait box with it meant scaling it to ~1.7x the
+// viewport width and showing a narrow centre strip of a landscape frame. The
+// mobile source is shot portrait, so it covers the same box at ~1.2x and needs
+// far less upscaling. <picture> with media queries means only one of the two is
+// ever fetched — swapping on a CSS class would download both.
+const DESKTOP_SRC = "/images/hero-section/heronewbg.webp";
+const MOBILE_SRC = "/images/hero-section/heromobilebg.webp";
+const BREAKPOINT = "(min-width: 1024px)";
 
 function HeroBackground() {
+  const common = { alt: "", fill: true, priority: true } as const;
+
+  const {
+    props: { srcSet: desktopSrcSet },
+  } = getImageProps({ ...common, src: DESKTOP_SRC, sizes: "110vw" });
+
+  const {
+    props: { srcSet: mobileSrcSet, ...rest },
+  } = getImageProps({ ...common, src: MOBILE_SRC, sizes: "125vw" });
+
   return (
-    <div className="absolute inset-0 z-0 hero-bg">
-      {/* `sizes` has to describe the width the image is *rendered* at, not the
-          width of the box. This is a 2:1 photo filling a portrait box, so
-          object-cover scales it to match the box height and it ends up roughly
-          1.7x the viewport wide on phones — asking for 100vw there fetched a
-          1200px file for a ~1500px render, which is what made it look soft. */}
-      <Image
-        src="/images/hero-section/heronewbg.webp"
-        alt=""
-        fill
-        priority
-        sizes="(max-width: 1023px) 170vw, 110vw"
-        className="object-cover object-[62%_center] lg:object-center"
-      />
+    <div className="hero-bg absolute inset-0 z-0">
+      <picture>
+        <source media={BREAKPOINT} srcSet={desktopSrcSet} />
+        <source srcSet={mobileSrcSet} />
+        <img
+          {...rest}
+          alt=""
+          className="absolute inset-0 size-full object-cover"
+        />
+      </picture>
     </div>
   );
 }
