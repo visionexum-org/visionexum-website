@@ -2,14 +2,18 @@
 
 import { useEffect, useRef } from "react";
 
-type CursorMode = "free" | "button" | "text";
+type CursorMode = "free" | "text";
+
+// Two states only: a plain dot, and the caret bar over anything typeable. The
+// shape is sprung between them rather than swapped, which is what made the
+// original transition read as smooth.
+const BASE = {
+  free: { width: 16, height: 16, radius: 8 },
+  text: { width: 3, height: 28, radius: 1.5 },
+} as const;
 
 const SPRING_STIFFNESS = 220;
 const SPRING_DAMPING = 24;
-
-// Dipped on every mode change, then sprung back to 1 so the shape swap
-// registers as a deliberate beat rather than a hard cut.
-const MODE_CHANGE_SCALE = 0.84;
 
 function stepSpring(
   current: number,
@@ -24,21 +28,13 @@ function stepSpring(
 }
 
 function CustomCursor() {
-  const rootRef = useRef<HTMLDivElement>(null);
-  const arrowRef = useRef<SVGSVGElement>(null);
-  const handRef = useRef<SVGSVGElement>(null);
-  const beamRef = useRef<SVGSVGElement>(null);
+  const elRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!window.matchMedia("(pointer: fine)").matches) return;
 
-    const root = rootRef.current;
-    const shapes = {
-      free: arrowRef.current,
-      button: handRef.current,
-      text: beamRef.current,
-    };
-    if (!root || !shapes.free || !shapes.button || !shapes.text) return;
+    const el = elRef.current;
+    if (!el) return;
 
     const reduceMotionQuery = window.matchMedia(
       "(prefers-reduced-motion: reduce)"
@@ -58,10 +54,13 @@ function CustomCursor() {
     let y = targetY;
 
     let mode: CursorMode = "free";
-    let scale = 1;
-    let scaleVel = 0;
-    const opacity: Record<CursorMode, number> = { free: 1, button: 0, text: 0 };
-    const opacityVel: Record<CursorMode, number> = { free: 0, button: 0, text: 0 };
+
+    let width: number = BASE.free.width;
+    let height: number = BASE.free.height;
+    let radius: number = BASE.free.radius;
+    let widthVel = 0;
+    let heightVel = 0;
+    let radiusVel = 0;
 
     let lastTimestamp = performance.now();
     let rafId = 0;
@@ -69,11 +68,10 @@ function CustomCursor() {
 
     const resolveMode = (target: EventTarget | null): CursorMode => {
       if (!(target instanceof Element)) return "free";
-      if (target.closest('input, textarea, [contenteditable="true"], [data-cursor="text"]')) {
+      if (
+        target.closest('input, textarea, [contenteditable="true"], [data-cursor="text"]')
+      ) {
         return "text";
-      }
-      if (target.closest('a, button, [role="button"], [data-cursor="button"]')) {
-        return "button";
       }
       return "free";
     };
@@ -83,20 +81,11 @@ function CustomCursor() {
         hasMoved = true;
         x = e.clientX;
         y = e.clientY;
-        root.style.opacity = "1";
+        el.style.opacity = "1";
       }
-
       targetX = e.clientX;
       targetY = e.clientY;
-
-      const nextMode = resolveMode(e.target);
-      if (nextMode !== mode) {
-        mode = nextMode;
-        if (!reduceMotion) {
-          scale = MODE_CHANGE_SCALE;
-          scaleVel = 0;
-        }
-      }
+      mode = resolveMode(e.target);
     };
 
     const startLoop = () => {
@@ -112,21 +101,18 @@ function CustomCursor() {
     };
 
     const handlePointerLeaveViewport = () => {
-      root.style.opacity = "0";
+      el.style.opacity = "0";
       stopLoop();
     };
 
     const handlePointerEnterViewport = () => {
-      if (hasMoved) root.style.opacity = "1";
+      if (hasMoved) el.style.opacity = "1";
       startLoop();
     };
 
     const handleVisibilityChange = () => {
-      if (document.hidden) {
-        stopLoop();
-      } else {
-        startLoop();
-      }
+      if (document.hidden) stopLoop();
+      else startLoop();
     };
 
     window.addEventListener("pointermove", handlePointerMove, { passive: true });
@@ -147,34 +133,25 @@ function CustomCursor() {
         y += (targetY - y) * factor;
       }
 
-      const dtSec = Math.min(0.032, dt / 1000);
+      const base = BASE[mode];
 
       if (reduceMotion) {
-        scale = 1;
+        width = base.width;
+        height = base.height;
+        radius = base.radius;
       } else {
-        [scale, scaleVel] = stepSpring(scale, scaleVel, 1, dtSec);
+        const dtSec = Math.min(0.032, dt / 1000);
+        [width, widthVel] = stepSpring(width, widthVel, base.width, dtSec);
+        [height, heightVel] = stepSpring(height, heightVel, base.height, dtSec);
+        [radius, radiusVel] = stepSpring(radius, radiusVel, base.radius, dtSec);
       }
 
-      (Object.keys(shapes) as CursorMode[]).forEach((key) => {
-        const target = key === mode ? 1 : 0;
-        if (reduceMotion) {
-          opacity[key] = target;
-        } else {
-          [opacity[key], opacityVel[key]] = stepSpring(
-            opacity[key],
-            opacityVel[key],
-            target,
-            dtSec
-          );
-        }
-        shapes[key]!.style.opacity = opacity[key].toFixed(3);
-      });
+      el.style.transform = `translate3d(${(x - width / 2).toFixed(2)}px, ${(y - height / 2).toFixed(2)}px, 0)`;
+      el.style.width = `${width.toFixed(2)}px`;
+      el.style.height = `${height.toFixed(2)}px`;
+      el.style.borderRadius = `${radius.toFixed(2)}px`;
 
-      root.style.transform = `translate3d(${x.toFixed(2)}px, ${y.toFixed(2)}px, 0) scale(${scale.toFixed(3)})`;
-
-      if (running) {
-        rafId = requestAnimationFrame(tick);
-      }
+      if (running) rafId = requestAnimationFrame(tick);
     };
 
     rafId = requestAnimationFrame(tick);
@@ -190,74 +167,13 @@ function CustomCursor() {
     };
   }, []);
 
-  // Each shape is offset so its own hotspot lands on the container origin,
-  // which keeps the animation loop free of per-mode positioning maths. The
-  // navy outline is what a solid fill needs to stay legible over both the
-  // navy and the cream sections, now that mix-blend-difference is gone.
   return (
     <div
-      ref={rootRef}
+      ref={elRef}
       aria-hidden="true"
-      className="pointer-events-none fixed top-0 left-0 z-999 will-change-transform"
+      className="pointer-events-none fixed top-0 left-0 z-999 bg-black will-change-transform"
       style={{ opacity: 0 }}
-    >
-      <svg
-        ref={arrowRef}
-        width="17"
-        height="22"
-        viewBox="0 0 17 22"
-        fill="none"
-        className="absolute top-0 left-0"
-        style={{ transform: "translate(-1.5px, -1.5px)" }}
-      >
-        <path
-          d="M1.5 1.5V17.4L6 13.6L8.7 20L11.6 18.8L8.9 12.6L14.6 12.3Z"
-          className="fill-white stroke-navy"
-          strokeWidth="1.6"
-          strokeLinejoin="round"
-        />
-      </svg>
-
-      <svg
-        ref={handRef}
-        width="24"
-        height="27"
-        viewBox="0 0 24 27"
-        fill="none"
-        className="absolute top-0 left-0"
-        style={{ transform: "translate(-7px, -1.5px)" }}
-      >
-        <path
-          d="M7.4 13.2V4.1a1.8 1.8 0 0 1 3.6 0v6.6V9.2a1.7 1.7 0 0 1 3.4 0v1.6a1.7 1.7 0 0 1 3.4 0v1.2a1.7 1.7 0 0 1 3.4 0v4.9c0 4-2.7 6.9-6.7 6.9h-2.2c-2.3 0-3.8-.9-5.1-2.7l-4.3-6a1.8 1.8 0 0 1 2.7-2.3z"
-          className="fill-white stroke-navy"
-          strokeWidth="1.6"
-          strokeLinejoin="round"
-        />
-      </svg>
-
-      <svg
-        ref={beamRef}
-        width="12"
-        height="26"
-        viewBox="0 0 12 26"
-        fill="none"
-        className="absolute top-0 left-0"
-        style={{ transform: "translate(-6px, -13px)" }}
-      >
-        <path
-          d="M3 3h6M6 3v20M3 23h6"
-          className="stroke-navy"
-          strokeWidth="4.2"
-          strokeLinecap="round"
-        />
-        <path
-          d="M3 3h6M6 3v20M3 23h6"
-          className="stroke-white"
-          strokeWidth="1.7"
-          strokeLinecap="round"
-        />
-      </svg>
-    </div>
+    />
   );
 }
 

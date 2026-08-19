@@ -4,6 +4,7 @@ import { useState } from "react";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { SmoothInput } from "@/components/ui/smooth-input";
 import { ArrowUpRight } from "@/components/shared/icons";
 
 export type LeadFormState = {
@@ -68,7 +69,7 @@ function Field({
           className={cn(fieldClassName, "resize-none")}
         />
       ) : (
-        <input
+        <SmoothInput
           id={name}
           name={name}
           value={value}
