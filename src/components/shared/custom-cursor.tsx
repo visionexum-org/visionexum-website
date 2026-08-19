@@ -203,14 +203,20 @@ function CustomCursor() {
       className="pointer-events-none fixed top-0 left-0 z-999 transition-[color] duration-200 ease-out will-change-transform"
       style={{ opacity: 0, color: TONE_ON_LIGHT }}
     >
+      {/* transform-origin sits at the element's own corner, and the translate
+          is applied before the rotate, so the tip lands on the pointer and the
+          rotation swings the body around that point rather than drifting it. */}
       <svg
         ref={arrowRef}
-        width="25"
-        height="25.5"
+        width="18"
+        height="18.35"
         viewBox="0 0 206 210"
         fill="none"
         className="absolute top-0 left-0"
-        style={{ transform: "translate(-23.6px, -0.6px)" }}
+        style={{
+          transformOrigin: "0 0",
+          transform: "rotate(-20deg) translate(-17px, -0.43px)",
+        }}
       >
         <path
           d={POINTER_PATH}
