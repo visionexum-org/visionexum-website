@@ -253,18 +253,14 @@ function ColorBends({
       rafRef.current = requestAnimationFrame(loop);
     };
 
-    // Two separate problems, one cause: this canvas used to render every frame
-    // from mount, whether or not it was anywhere near the viewport.
+    // Drivers defer linking a shader program until rasterisation is required,
+    // which places the compile on the main thread at the moment the canvas
+    // enters the viewport. compileAsync performs the link ahead of that point,
+    // off the critical path, using parallel shader compilation where the driver
+    // supports it.
     //
-    // Drivers defer linking a shader program until something actually has to
-    // be rasterised, so the compile landed the moment the footer scrolled into
-    // view — a single ~3.2s synchronous block on the main thread, which stalled
-    // scrolling and left anchor navigation stranded wherever it happened to be.
-    // compileAsync links it up front, off the critical path, using parallel
-    // shader compilation where the driver supports it.
-    //
-    // The loop is then gated on visibility, so an off-screen footer no longer
-    // burns a GPU frame every 16ms behind the rest of the page.
+    // The render loop is additionally gated on visibility, so an off-screen
+    // canvas does not consume a frame on every tick.
     let isVisible = false;
     const startLoop = () => {
       if (rafRef.current === null) {

@@ -15,8 +15,8 @@ import { ArrowUpRight } from "@/components/shared/icons";
 
 type Connector = { d: string; head: string };
 
-// Same 15% speedup as the card open/close interaction (see service-card.tsx)
-// applied to the card resize morph specifically.
+// Matches the rate applied to the card open and close interaction (see
+// service-card.tsx), scoped here to the card resize morph.
 const INTERACTION_SPEED = 1.15;
 
 function buildArrowHead(ex: number, ey: number, c2x: number, c2y: number) {
@@ -44,15 +44,15 @@ function ServicosSection() {
   const lastActionRef = useRef<{ type: "open" | "close"; index: number } | null>(null);
   const [openIndex, setOpenIndex] = useState<number | null>(null);
   const [connectors, setConnectors] = useState<Connector[]>([]);
-  // Flips false -> true once, the first time `measure` ever runs, and never
-  // back — used only to gate the entrance timeline below (see its comment).
+  // Transitions from false to true on the first run of `measure` and never
+  // reverts. Used solely to gate the entrance timeline below.
   const [hasMeasuredOnce, setHasMeasuredOnce] = useState(false);
 
   const measure = useCallback(() => {
     setHasMeasuredOnce(true);
-    // Arrows only bridge the zigzag while every card is collapsed; once one
-    // expands to full width the staircase is broken, so drop them. Also stay
-    // clear mid-morph so they don't snap to their final spots early.
+    // Arrows bridge the zigzag only while every card is collapsed. An expanded
+    // card breaks the staircase, so they are withheld, and also during the
+    // morph to prevent them settling at their final positions early.
     if (openIndex !== null || morphingRef.current) {
       setConnectors([]);
       return;
@@ -85,8 +85,8 @@ function ServicosSection() {
   }, [openIndex]);
 
   useEffect(() => {
-    // Deferred a frame so the initial state update lands outside the effect
-    // body; arrows fade in via GSAP, so the one-frame delay is invisible.
+    // Deferred by one frame so the initial state update lands outside the
+    // effect body. The arrows fade in through GSAP, so the delay is not visible.
     const raf = requestAnimationFrame(measure);
     window.addEventListener("resize", measure);
     document.fonts?.ready.then(measure).catch(() => {});
@@ -139,14 +139,14 @@ function ServicosSection() {
         const labels = gsap.utils.toArray<HTMLElement>(".staircase-label");
         const numbers = gsap.utils.toArray<HTMLElement>(".staircase-number");
         const cards = gsap.utils.toArray<HTMLElement>(".service-card");
-        // Populated only once hasMeasuredOnce is true — see the dependency
-        // note below.
+        // Populated only once hasMeasuredOnce is true; see the dependency note
+        // below.
         const connectorLines = gsap.utils.toArray<SVGPathElement>(".connector-line");
         const connectorHeads = gsap.utils.toArray<SVGPathElement>(".connector-head");
 
-        // Every hidden "from" state set up front, not left to each .to()'s
-        // own scheduling — nothing should flash at full size/opacity before
-        // the ScrollTrigger actually fires.
+        // All hidden "from" states are set up front rather than left to the
+        // scheduling of each .to(), so no element appears at full size or
+        // opacity before the ScrollTrigger fires.
         gsap.set(".servicos-eyebrow", { scaleX: 0 });
         gsap.set(eyebrowSplit?.words ?? [], { y: 16, opacity: 0 });
         gsap.set(titleSplit?.lines ?? [], { x: -24, y: -20, opacity: 0 });
@@ -163,8 +163,8 @@ function ServicosSection() {
           scrollTrigger: { trigger: sectionRef.current, start: "top 70%", once: true },
         });
 
-        // 1. Eyebrow pill: the shape grows left -> right, then its words
-        // slide down into place inside it.
+        // 1. Eyebrow pill: the shape grows left to right, then its words slide
+        // down into place within it.
         tl.to(".servicos-eyebrow", { scaleX: 1, duration: 0.32, ease: "power2.out" }).to(
           eyebrowSplit?.words ?? [],
           { y: 0, opacity: 1, duration: 0.32, stagger: 0.04, ease: "power2.out" },
@@ -185,11 +185,10 @@ function ServicosSection() {
           "-=0.35"
         );
 
-        // 4. Staircase: its own nested timeline, added at position 0 so it
-        // starts alongside the pill rather than waiting for the text column
-        // — keeping it separate means its internal "-=X" offsets don't
-        // fight the ones above. Each bar grows bottom-up, and the instant
-        // it lands, its own label + number slide up.
+        // 4. Staircase: a nested timeline added at position 0 so it begins
+        // alongside the pill rather than after the text column. Keeping it
+        // separate isolates its relative offsets from those above. Each bar
+        // grows upward, and its label and number slide up as it lands.
         const staircaseTl = gsap.timeline();
         bars.forEach((bar, i) => {
           staircaseTl.to(
@@ -205,10 +204,9 @@ function ServicosSection() {
         });
         tl.add(staircaseTl, 0);
 
-        // 5. CTA: phrase blurs in word by word, then the button slides up.
-        // Timed off tl.duration() so far — whichever of the text column or
-        // the staircase track actually finishes last — not a fixed offset
-        // from either one specifically.
+        // 5. CTA: the phrase blurs in word by word, then the button slides up.
+        // Timed from the current tl.duration(), so it follows whichever of the
+        // text column or the staircase completes last.
         const introDone = tl.duration();
         tl.to(
           ctaSplit?.words ?? [],
@@ -216,9 +214,9 @@ function ServicosSection() {
           introDone - 0.1
         ).to(".servicos-cta-button", { y: 0, opacity: 1, duration: 0.5, ease: "power2.out" }, "-=0.15");
 
-        // Cards + connectors: scroll-scrubbed, not autoplayed. Each card,
-        // and its dashed connector line, tracks scroll position directly
-        // across the stage's height — scrolling back up un-reveals them.
+        // Cards and connectors are scroll-scrubbed rather than autoplayed. Each
+        // card and its dashed connector tracks scroll position across the stage
+        // height, so reversing the scroll reverses the reveal.
         const cardsTl = gsap.timeline({
           scrollTrigger: {
             trigger: stageRef.current,
@@ -275,13 +273,13 @@ function ServicosSection() {
 
       return () => mm.revert();
     },
-    // Re-runs once `hasMeasuredOnce` flips to true, rebuilding this whole
-    // setup after the connector <path> elements actually exist in the DOM.
+    // Re-runs once `hasMeasuredOnce` becomes true, rebuilding this setup after
+    // the connector <path> elements are present in the DOM.
     { scope: sectionRef, dependencies: [hasMeasuredOnce] }
   );
 
-  // Morph flow: snapshot every card box, flip the open state, then let the
-  // layout effect below animate the recorded boxes to their new size/place.
+  // Morph sequence: capture every card box, toggle the open state, then let
+  // the layout effect below animate the recorded boxes to their new geometry.
   const handleToggle = (index: number) => {
     const boxes = cardRefs.current.filter((el): el is HTMLDivElement => el !== null);
     flipStateRef.current = Flip.getState(boxes);
@@ -304,9 +302,9 @@ function ServicosSection() {
       morphingRef.current = false;
       if (stage) stage.style.height = "";
       measure();
-      // ServiceCard listens for these to know the resize is truly done
-      // before animating its new view's text in — a matching event either
-      // way, since both opening and closing get their own text reveal now.
+      // ServiceCard consumes these to confirm the resize has completed before
+      // animating the incoming text. Both directions dispatch an event, as both
+      // carry their own text reveal.
       if (action) {
         window.dispatchEvent(
           new CustomEvent(action.type === "open" ? "servicos:expanded" : "servicos:collapsed", {
@@ -322,13 +320,13 @@ function ServicosSection() {
       return;
     }
 
-    // Kill any in-flight morph here rather than in a cleanup: React Strict
-    // Mode double-invokes effects in dev, and a cleanup-based kill would tear
-    // this animation down the instant it starts.
+    // Any in-flight morph is killed here rather than in a cleanup function.
+    // React Strict Mode double-invokes effects in development, so a
+    // cleanup-based kill would terminate the animation as it starts.
     morphAnimRef.current?.kill();
 
-    // Pin the stage to its committed height so the momentarily-absolute cards
-    // don't collapse it (and shove the rest of the page) during the morph.
+    // The stage is pinned to its committed height so the temporarily absolute
+    // cards do not collapse it, and displace the rest of the page, mid-morph.
     stage.style.height = "";
     stage.style.height = `${stage.offsetHeight}px`;
 

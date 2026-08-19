@@ -70,8 +70,8 @@ function MetodoSection() {
       const mm = gsap.matchMedia();
 
       mm.add("(prefers-reduced-motion: no-preference)", () => {
-        // Heading (2 lines) and subheading (3 sentences), each split into
-        // words for a slide-up + fade cascade, sentence by sentence.
+        // Heading and subheading are split into words for a slide-and-fade
+        // cascade, applied sentence by sentence.
         const titleSentences = gsap.utils.toArray<HTMLElement>(".metodo-title-sentence");
         const titleSplits = titleSentences.map((sentence) =>
           SplitText.create(sentence, { type: "words", wordsClass: "metodo-title-word" })
@@ -98,11 +98,10 @@ function MetodoSection() {
         gsap.set(cardDashes, { scaleX: 0, transformOrigin: "right" });
         gsap.set(cardMetas, { y: 10, opacity: 0 });
 
-        // Body copy: split into lines, then give each line an absolutely
-        // positioned "skeleton" bar covering it — the real text sits
-        // underneath the whole time. Each bar draws in left to right, then
-        // erases left to right, so the text reads as being unveiled from
-        // under a loading-style stroke rather than simply fading in.
+        // Body copy is split into lines, each covered by an absolutely
+        // positioned skeleton bar; the text itself remains in place beneath.
+        // Each bar draws in left to right and then erases in the same
+        // direction, so the text is uncovered rather than faded in.
         const bodySplits = cardBodies.map((body) =>
           SplitText.create(body, { type: "lines", linesClass: "method-body-line" })
         );
@@ -118,18 +117,14 @@ function MetodoSection() {
           })
         );
 
-        // Paused, not driven by its own ScrollTrigger: plays from the
-        // "metodo:snapped" event, dispatched once sobre-nós's hand-off
-        // animation actually completes — the same pattern used for
-        // manifesto → sobre-nós, since a scroll-position threshold at
-        // exactly "fully framed" is unreliable against the virtual scroll's
-        // eased settle. The ScrollTrigger fallback below covers reaching
-        // this section any other way.
-        // Every group starts together at position 0. The sequence used to
-        // chain heading → paragraph → divider → cards, which read as slow
-        // because the last card only began once everything before it had
-        // finished. Staggers are kept inside each group so the section still
-        // resolves with texture rather than as one flat pop.
+        // Paused rather than driven by its own ScrollTrigger, and played from
+        // the "metodo:snapped" event dispatched once the preceding hand-off
+        // completes. A scroll-position threshold at "fully framed" is
+        // unreliable against the virtual scroll's eased settle. The
+        // ScrollTrigger below covers arrival by any other route.
+        //
+        // Every group starts at position 0 so the section resolves as a whole;
+        // staggers are retained within each group to preserve texture.
         const tl = gsap.timeline({ paused: true });
 
         titleSplits.forEach((split) => {
@@ -150,9 +145,8 @@ function MetodoSection() {
 
         tl.to(divider, { scaleX: 1, duration: 0.5, ease: "power2.inOut" }, 0);
 
-        // Cards enter as one group. Each still runs its own internal
-        // choreography — title drops in, the dash draws from the right, the
-        // body's skeleton lines sweep across — but all three begin at once.
+        // The cards enter as one group. Each retains its internal choreography
+        // (title, dash, skeleton lines) but all three begin together.
         cards.forEach((card, index) => {
           const items = bodyOverlays[index];
           const cardTl = gsap.timeline();
@@ -189,10 +183,10 @@ function MetodoSection() {
         const play = () => tl.play();
         window.addEventListener("metodo:snapped", play);
 
-        // Safety net for reaching this section any other way (scrolling up
-        // from below, a direct nav-link jump, etc). Since this section
-        // fits within one viewport like the others, waiting until it's
-        // mostly framed keeps the cards on-screen for the whole sequence.
+        // Covers arrival by any other route, such as scrolling up from below or
+        // a direct navigation link. The section fits within one viewport, so
+        // waiting until it is mostly framed keeps the cards on screen for the
+        // full sequence.
         const fallbackST = ScrollTrigger.create({
           trigger: sectionRef.current,
           start: "top 50%",

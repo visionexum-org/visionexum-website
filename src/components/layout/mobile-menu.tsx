@@ -13,10 +13,9 @@ import { ArrowUpRight } from "@/components/shared/icons";
 
 const subscribeNoop = () => () => {};
 
-// Ported from the codegrid overlay-menu reference: four backing panels wipe
-// down on staggered scaleY, the item panel is revealed by clip-path just
-// before they land, and the links then rise line by line behind their own
-// masks. Only the palette and the copy differ.
+// Overlay sequence: four backing panels wipe down on staggered scaleY, the
+// item panel is revealed by clip-path shortly before they land, and the links
+// then rise line by line behind their own masks.
 const PANELS = ["bg-[#b8975a]", "bg-[#4a3b8c]", "bg-[#0086ff]", "bg-[#003a63]"];
 
 function MobileMenu() {
@@ -25,22 +24,21 @@ function MobileMenu() {
   const linkBlocksRef = useRef<string[]>([]);
   const isAnimating = useRef(false);
   const [isOpen, setIsOpen] = useState(false);
-  // The overlay is portalled to document.body, which does not exist while the
-  // component renders on the server. This reports false there and true once
-  // hydrated, so GSAP setup waits for a scope that actually has nodes in it.
+  // The overlay is portalled to document.body, which is unavailable during
+  // server rendering. This reports false there and true once hydrated, so GSAP
+  // setup runs against a populated scope.
   const mounted = useSyncExternalStore(subscribeNoop, () => true, () => false);
 
   useGSAP(
     () => {
       if (!mounted || !overlayRef.current) return;
-      // The overlay is lg:hidden, and SplitText cannot measure lines inside a
-      // display:none subtree — it would produce nothing and every later
-      // selector would log a missing target. Desktop has no use for any of
-      // this anyway.
+      // The overlay is hidden at desktop widths, and SplitText cannot measure
+      // lines within a display:none subtree. Setup is therefore restricted to
+      // the breakpoints where the menu is used.
       if (!window.matchMedia("(max-width: 1023px)").matches) return;
 
-      // The CTA is deliberately left out of the split — it carries an inline
-      // SVG, which SplitText would tear out of its flow.
+      // The CTA is excluded from the split: it contains an inline SVG, which
+      // SplitText would remove from the flow.
       const linkBlocks = [".menu-primary .line", ".menu-socials .line"];
       linkBlocksRef.current = linkBlocks;
 

@@ -32,11 +32,10 @@ function ManifestoSection() {
           gsap.set(split.words, { x: REVEAL_X, y: REVEAL_Y, opacity: 0, filter: BLUR });
         });
 
-        // Anchored to the paragraph itself, not the full h-screen section,
-        // so the reveal/exit windows stay tight and the text is on-screen
-        // throughout. The two triggers meet exactly at "center center", so
-        // the text is fully sharp precisely when it's centered in the
-        // viewport.
+        // Anchored to the paragraph rather than the full-height section, which
+        // keeps the reveal and exit windows tight and the text on screen
+        // throughout. The two triggers meet at "center center", so the text
+        // reaches full clarity as it centres in the viewport.
         const enterTl = gsap.timeline({
           scrollTrigger: {
             trigger: textRef.current,
@@ -63,11 +62,11 @@ function ManifestoSection() {
           );
         });
 
-        // Exit continues the same motion direction rather than reversing
-        // it, over an equally tight window so it finishes while the text is
-        // still on-screen. Once it finishes (scrolling past "end"), hands
-        // off to sobre-nós — snapping the scroll so that section lands
-        // fully framed before its own entrance plays.
+        // The exit continues the same direction of motion rather than reversing
+        // it, over an equally tight window so it completes while the text is
+        // still on screen. On completion it hands off to the next section,
+        // snapping the scroll so that section is fully framed before its
+        // entrance plays.
         const exitTl = gsap.timeline({
           scrollTrigger: {
             trigger: textRef.current,

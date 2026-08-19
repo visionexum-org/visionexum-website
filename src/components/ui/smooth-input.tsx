@@ -4,9 +4,9 @@ import { useEffect, useRef } from "react";
 
 import { cn } from "@/lib/utils";
 
-// The native caret is hidden and redrawn as an element so it can be sprung
-// between positions instead of jumping. Everything else about the input stays
-// native: real value, real selection, real IME, real form semantics.
+// The native caret is hidden and redrawn as an element so its position can be
+// sprung rather than stepped. The input itself remains native throughout:
+// value, selection, IME and form semantics are unchanged.
 const SPRING_STIFFNESS = 500;
 const SPRING_DAMPING = 30;
 const SPRING_MASS = 0.5;
@@ -69,7 +69,7 @@ function SmoothInput({
       measure.textContent = before;
       const absolute = before.length > 0 ? measure.offsetWidth + paddingLeft : paddingLeft;
 
-      // Keep the real caret position on screen when the value overflows.
+      // Keeps the caret position within view when the value overflows.
       const maxScroll = Math.max(0, input.scrollWidth - input.clientWidth);
       const visibleRight = input.scrollLeft + input.clientWidth - paddingRight;
       const visibleLeft = input.scrollLeft + paddingLeft;
@@ -143,9 +143,8 @@ function SmoothInput({
     const resizeObserver = new ResizeObserver(onScrollOrResize);
     resizeObserver.observe(wrapper);
 
-    // Jump straight to the caret on focus rather than sliding in from
-    // wherever it was left: the arrival should read as placing a caret, not
-    // as an object flying across the field.
+    // On focus the caret is positioned directly rather than animated from its
+    // previous location, so the transition reads as placement.
     const onFocusIn = () => {
       update();
       current = target;

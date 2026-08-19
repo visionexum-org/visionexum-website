@@ -37,7 +37,8 @@ export async function POST(request: Request) {
 
   const lead = parsed.data;
 
-  // Honeypot tripped — silent success prevents bot detection
+  // Honeypot filled. A success response is returned so the rejection is not
+  // detectable by the submitter.
   if (lead.empresaWebsite) {
     return NextResponse.json({ ok: true });
   }

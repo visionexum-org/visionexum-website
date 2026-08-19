@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-// Per-request nonce enables strict CSP with Next.js dynamically-injected scripts
+// A per-request nonce permits a strict CSP alongside the scripts Next.js
+// injects at runtime.
 export function proxy(request: NextRequest) {
   const nonce = Buffer.from(crypto.randomUUID()).toString("base64");
   const scriptSrc =

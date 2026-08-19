@@ -19,9 +19,9 @@ function ValueCard({
   className?: string;
 }) {
   return (
-    // The slot fixes the grid row's height; the card animates inside it,
-    // absolutely positioned to the slot's floor. An animated auto-height
-    // row would drift as two cards sharing it grow at different rates.
+    // The slot fixes the grid row height; the card animates within it,
+    // positioned absolutely against the slot's base. An animated auto-height
+    // row would drift as cards sharing it grow at different rates.
     <div className={cn("value-card-slot relative self-end", className)}>
       <div className="value-card absolute inset-x-0 bottom-0 flex flex-col gap-3 rounded-[16px] bg-lavender p-5">
         <span className="value-card-reveal-item font-heading flex size-8 items-center justify-center rounded-full bg-white text-[20px] leading-none text-navy">
@@ -69,12 +69,12 @@ function SobreNosSection() {
           gsap.set(split.words, { y: 16, opacity: 0, filter: "blur(10px)" });
         });
 
-        // Row height matches the tallest card in that row, not each card's
-        // own natural height, so shorter cards don't finish visibly stunted
-        // next to taller row-mates (the plain grid did this via
-        // align-self:stretch; an explicit animated height has to replicate
-        // it manually). Measured synchronously before paint, before the
-        // collapse below, so there's no flash of full-height content.
+        // Row height is set from the tallest card in the row rather than each
+        // card's natural height, so shorter cards do not resolve visibly short
+        // beside taller ones. A static grid achieves this through
+        // align-self:stretch; an explicitly animated height must replicate it.
+        // Measured synchronously before paint and before the collapse below, so
+        // no full-height content is shown.
         const naturalHeights = cards.map((card) => card.getBoundingClientRect().height);
         const ROW_GROUPS = [
           [0, 1],
@@ -94,13 +94,11 @@ function SobreNosSection() {
         );
         revealItems.forEach((items) => gsap.set(items, { y: 10, opacity: 0 }));
 
-        // Paused, not driven by its own ScrollTrigger: a scroll-position
-        // threshold at exactly "fully framed" is unreliable against the
-        // virtual scroll's eased settle. Plays from the "sobre-nos:snapped"
-        // event, dispatched once manifesto's own hand-off animation
-        // actually completes. The ScrollTrigger fallback below covers
-        // reaching this section any other way (scrolling up, a direct nav
-        // link).
+        // Paused rather than driven by its own ScrollTrigger: a scroll-position
+        // threshold at "fully framed" is unreliable against the virtual
+        // scroll's eased settle. Playback is triggered by the
+        // "sobre-nos:snapped" event, dispatched once the preceding hand-off
+        // completes. The ScrollTrigger below covers arrival by any other route.
         const tl = gsap.timeline({ paused: true });
 
         tl.to(
@@ -116,9 +114,8 @@ function SobreNosSection() {
           },
           0
         );
-        // Anchors the quote and the cards to a fixed point rather than
-        // chaining them, so both run concurrently instead of the cards
-        // waiting for the quote to finish.
+        // A fixed label anchors the quote and the cards to the same point so
+        // they run concurrently rather than in sequence.
         tl.addLabel("afterTitle");
 
         quoteSplits.forEach((split, index) => {
@@ -136,12 +133,11 @@ function SobreNosSection() {
           );
         });
 
-        // Each card grows from a 10px sliver to its row's shared height,
-        // pinned to the bottom of its fixed-height slot so it rises rather
-        // than drops; its contents then fade in top to bottom. Height stays
-        // fixed after growing rather than resetting to "auto", which would
-        // re-measure the card's own (possibly shorter) content and undo the
-        // row's uniform height.
+        // Each card grows from a 10px sliver to the shared row height, anchored
+        // to the bottom of its fixed-height slot so it rises rather than
+        // descends, after which its contents fade in from the top. The height
+        // remains fixed rather than reverting to "auto", which would re-measure
+        // the card's own content and break the uniform row height.
         cards.forEach((card, index) => {
           const items = revealItems[index];
           const cardTl = gsap.timeline({
@@ -164,9 +160,9 @@ function SobreNosSection() {
         const play = () => tl.play();
         window.addEventListener("sobre-nos:snapped", play);
 
-        // Sits well past where the manifesto hand-off would normally have
-        // already fired, so it never pre-empts the synced snap during
-        // ordinary top-to-bottom scrolling.
+        // Positioned well beyond the point at which the hand-off normally
+        // fires, so it does not pre-empt the synchronised snap during ordinary
+        // top-to-bottom scrolling.
         const fallbackST = ScrollTrigger.create({
           trigger: sectionRef.current,
           start: "top 50%",
@@ -174,21 +170,17 @@ function SobreNosSection() {
           onEnter: play,
         });
 
-        // Exit is tied directly to scroll position, not a timed tween, so
-        // it overlaps visually with método sliding in underneath. Once it
-        // finishes, hands off to método the same way manifesto handed off
-        // here — snapping the scroll so it lands fully framed before its
-        // own entrance plays.
+        // The exit is bound to scroll position rather than to a timed tween, so
+        // it overlaps with the following section entering beneath it. On
+        // completion it hands off to that section, snapping the scroll so it is
+        // fully framed before its entrance plays.
         const content = gsap.utils.toArray<HTMLElement>(".sobre-nos-content")[0];
-        // Anchored to the section's own bottom, not the viewport. The old
-        // "top top" → "top -60%" measured 60vh of scroll from the moment the
-        // section's top touched the viewport top, which is the same thing only
-        // while the section is exactly one viewport tall. On a phone the cards
-        // stack and the section runs far taller, so that window expired around
-        // the third card and the fade — and the snap to método — fired while
-        // there was still content to read. Bottom-anchored, the exit covers
-        // the same 60vh but only once the whole section has been seen, and it
-        // collapses back to the identical desktop behaviour.
+        // Anchored to the section's own bottom rather than to the viewport. A
+        // viewport-anchored window is equivalent only while the section is
+        // exactly one viewport tall; where the cards stack and the section runs
+        // taller it expires before the content has been read. Anchoring to the
+        // bottom covers the same 60vh once the section has been seen in full,
+        // and is identical on viewports where the two coincide.
         const exitTl = gsap.timeline({
           scrollTrigger: {
             trigger: sectionRef.current,
@@ -213,9 +205,9 @@ function SobreNosSection() {
           tl.kill();
           titleSplit.revert();
           quoteSplits.forEach((split) => split.revert());
-          // React Strict Mode double-invokes this effect in dev; without
-          // restoring natural height here, the second run would re-measure
-          // while still collapsed and permanently freeze the reveal.
+          // React Strict Mode double-invokes this effect in development.
+          // Natural height is restored here so the second run does not
+          // re-measure while collapsed, which would freeze the reveal.
           gsap.set(cards, { height: "auto", overflow: "visible" });
           revealItems.forEach((items) => gsap.set(items, { clearProps: "y,opacity" }));
         };

@@ -1,4 +1,5 @@
-// WhatsApp Cloud API requires a pre-approved template. Submit to Meta:
+// The WhatsApp Cloud API requires a pre-approved template. Submit the
+// following to Meta for approval:
 //   Title: 🔔 Novo lead — Visio Nexum
 //   Body:
 //   Nome: {{1}}

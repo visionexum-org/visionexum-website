@@ -14,16 +14,16 @@ import { ArrowUpRight } from "@/components/shared/icons";
 
 const [zone0, zone1, zone2, zone3] = scoreZones;
 const AUTO_ADVANCE_MS = 6000;
-// Same premium content width as every other section; the two columns keep the
-// design's title:card ≈ 599:793 proportion whatever that width resolves to.
+// Shares the content width used across the site; the two columns preserve the
+// specified 599:793 title-to-card proportion at any resolved width.
 const COLUMN_GRID = "lg:grid-cols-[599fr_793fr]";
 
 function VisioScoreSection() {
   const sectionRef = useRef<HTMLElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
   const leavingRef = useRef<HTMLDivElement>(null);
-  // `from` holds the dimension being dealt away, so both cards exist for the
-  // length of the swap; null means nothing is in flight.
+  // `from` holds the outgoing dimension so both cards exist for the duration
+  // of the swap. A null value indicates no transition in progress.
   const [view, setView] = useState<{
     index: number;
     from: number | null;
@@ -40,9 +40,9 @@ function VisioScoreSection() {
       direction,
     }));
 
-  // Only advance while the section is actually on screen. Left ungated, the
-  // carousel keeps cycling out of view and the visitor can arrive to find a
-  // swap already mid-flight, colliding with the intro animation.
+  // Advances only while the section is on screen. Ungated, the carousel would
+  // continue to cycle out of view and a swap could already be in progress on
+  // arrival, overlapping the entrance animation.
   useEffect(() => {
     const section = sectionRef.current;
     if (!section) return;
@@ -54,8 +54,8 @@ function VisioScoreSection() {
     return () => observer.disconnect();
   }, []);
 
-  // Auto-advance the carousel; any change (manual or auto) resets the timer.
-  // Held back under reduced-motion so content doesn't move on its own.
+  // Auto-advances the carousel; any change, manual or automatic, resets the
+  // timer. Suppressed under reduced-motion.
   useEffect(() => {
     if (!isInView) return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
@@ -69,9 +69,9 @@ function VisioScoreSection() {
     return () => window.clearTimeout(id);
   }, [activeIndex, total, isInView]);
 
-  // Deck swap. Skipped on mount (`from` starts null) — the intro timeline
-  // owns the card's first appearance, and having both animate the same
-  // element was what made it arrive glitching.
+  // Deck swap, skipped on mount since `from` starts null. The entrance
+  // timeline owns the card's first appearance; both animating the same element
+  // would conflict.
   useEffect(() => {
     if (view.from === null) return;
 
@@ -88,8 +88,8 @@ function VisioScoreSection() {
     const dir = view.direction;
     const tl = gsap.timeline({ onComplete: settle });
 
-    // Incoming rides in from the side you are travelling towards and lands on
-    // top; the outgoing card slides the opposite way and drops underneath.
+    // The incoming card enters from the direction of travel and settles on
+    // top; the outgoing card exits in the opposite direction, beneath it.
     tl.fromTo(
       incoming,
       { xPercent: dir * 46, opacity: 0, scale: 0.95, rotate: dir * 1.6, force3D: true },

@@ -6,10 +6,9 @@ const TOUCH_MULTIPLIER = 1.5;
 const KEY_STEP = 90;
 const SETTLE_EPSILON = 0.05;
 
-// Flick momentum. Without it the page stops dead the instant a finger lifts,
-// which is what made touch scrolling feel stuck: every bit of travel had to be
-// dragged. Decay is per 16.67ms and rescaled by the real frame time so the
-// glide is the same length whatever the refresh rate.
+// Flick momentum. Touch input alone ends travel at the moment of release; the
+// decay below continues it. Decay is expressed per 16.67ms and rescaled by the
+// measured frame time so glide length is independent of refresh rate.
 const MOMENTUM_DECAY = 0.94;
 const MOMENTUM_MIN = 0.12;
 const MOMENTUM_MAX = 90;
@@ -44,9 +43,8 @@ const state: State = {
   momentum: 0,
 };
 
-// Set while a full-screen overlay owns the viewport. The input handlers live
-// on window, so without this the page would keep travelling underneath an
-// open menu as the finger drags across it.
+// Set while a full-screen overlay owns the viewport. Input handlers are bound
+// to window and would otherwise continue to scroll the page beneath it.
 let scrollLocked = false;
 
 function setScrollLocked(locked: boolean) {
@@ -120,18 +118,13 @@ function easeOutExpo(progress: number) {
   return progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress);
 }
 
-// Each call gets its own generation number; a stale step() bails if a newer
-// snapTo has since superseded it. Without this, two overlapping snaps (a
-// fast scroll crossing two hand-off triggers within the same few frames)
-// would each nudge state.target independently, fighting each other and
-// leaving the scroll stuck at neither destination.
+// Each call claims a generation; a superseded step() exits on its next frame.
+// Concurrent snaps would otherwise apply competing deltas to state.target.
 let snapGeneration = 0;
 
-// A snap the visitor asked for — clicking a nav link — outranks the automatic
-// hand-offs between sections. Travelling from the hero to Contato crosses
-// manifesto's and sobre-nós's hand-off triggers, and each one firing its own
-// snap would supersede the journey and strand it one section short of where
-// it was sent. Hand-offs stay suppressed until the requested snap lands.
+// Snaps requested through navigation take precedence over the automatic
+// hand-offs between sections. Travel spanning several sections crosses their
+// triggers, so hand-offs are suppressed until the requested snap completes.
 let userSnapEndsAt = 0;
 
 type SnapOptions = { user?: boolean };
@@ -146,9 +139,8 @@ function snapTo(
   if (options.user) userSnapEndsAt = performance.now() + duration + 120;
 
   const myGeneration = ++snapGeneration;
-  // Re-read each frame. Sections animate their own heights on scrub, so a
-  // destination measured at click time drifts while the page travels towards
-  // it — the further the journey, the further short it lands.
+  // Re-read per frame: section heights change under scrub, so a destination
+  // measured once at call time drifts over the course of the travel.
   const readDestination = () =>
     clamp(typeof destination === "function" ? destination() : destination);
 
@@ -168,18 +160,15 @@ function snapTo(
     if (myGeneration !== snapGeneration) return;
     const progress = Math.min(1, (now - start) / duration);
     const eased = easeOutExpo(progress);
-    // Incremental rather than absolute, so a wheel nudge mid-snap still
-    // registers instead of being overwritten every frame.
+    // Applied as a delta so concurrent wheel input is preserved rather than
+    // overwritten on each frame.
     const value = (readDestination() - from) * eased;
     state.target = clamp(state.target + (value - applied));
     applied = value;
-    // Re-arm every frame. tick() shuts the loop down as soon as target and
-    // current agree, and on the first frame of a snap they still do — tick is
-    // queued before this step runs, so it sees the old target, decides the
-    // page is at rest and stops. Without this the snap then advances target
-    // with nothing left to follow it, which is why an anchor link appeared to
-    // need a second click: that click restarted the loop and flushed the
-    // destination the first one had already set.
+    // Re-arm each frame. tick() halts once target and current agree, which is
+    // still true on the first frame of a snap because tick is queued ahead of
+    // this step. Without re-arming, the loop would not resume to follow the
+    // advancing target.
     startLoop();
     if (progress < 1) {
       requestAnimationFrame(step);
@@ -208,7 +197,7 @@ function tick(timestamp: number) {
     const before = state.target;
     state.target = clamp(state.target + state.momentum * (dt / 16.667));
     state.momentum *= Math.pow(MOMENTUM_DECAY, dt / 16.667);
-    // Spent, or run into either end of the page.
+    // Exhausted, or clamped at either end of the document.
     if (Math.abs(state.momentum) < MOMENTUM_MIN || state.target === before) {
       state.momentum = 0;
     }
@@ -236,10 +225,9 @@ function tick(timestamp: number) {
     })
   );
 
-  // Stop once at rest instead of looping forever — a continuously-firing
-  // "scroll" event at a constant position reads as "not scrolling down
-  // anymore" to listeners like the navbar, which would reveal itself
-  // every time the page sat idle. Resumed by requestTick() on new input.
+  // Halt at rest rather than looping indefinitely: an event dispatched
+  // continuously at a constant position is indistinguishable from upward
+  // scrolling to listeners such as the navbar. Resumed on the next input.
   if (state.running && !settled) {
     state.rafId = requestAnimationFrame(tick);
   } else {
@@ -284,7 +272,7 @@ function initVirtualScroll(trackEl: HTMLElement) {
     if (scrollLocked) return;
     state.lastTouchY = e.touches[0].clientY;
     state.lastTouchAt = performance.now();
-    // Catching the page mid-glide has to stop it, the way it does natively.
+    // Contact during a glide cancels it, matching native behaviour.
     state.momentum = 0;
     state.touchVelocity = 0;
   };
@@ -297,8 +285,8 @@ function initVirtualScroll(trackEl: HTMLElement) {
     const delta = state.lastTouchY - y;
     const dt = Math.max(1, now - state.lastTouchAt);
 
-    // Per-frame velocity, smoothed: a single stuttering sample right before
-    // the finger lifts should not decide how far the page then travels.
+    // Smoothed per-frame velocity: an irregular sample immediately before
+    // release must not determine the resulting travel distance.
     const sample = (delta / dt) * 16.667;
     state.touchVelocity = state.touchVelocity * 0.7 + sample * 0.3;
 
@@ -310,7 +298,7 @@ function initVirtualScroll(trackEl: HTMLElement) {
 
   const handleTouchEnd = () => {
     if (scrollLocked) return;
-    // Ignore velocity from a finger that had already come to rest.
+    // Discard velocity from a contact that had already come to rest.
     if (performance.now() - state.lastTouchAt > 100) {
       state.touchVelocity = 0;
       return;
@@ -377,10 +365,8 @@ function initVirtualScroll(trackEl: HTMLElement) {
   resizeObserver.observe(trackEl);
   window.addEventListener("resize", recalcMax);
 
-  // Belt-and-suspenders on top of the ResizeObserver: late-loading web
-  // fonts and images can shift layout after the initial measurement.
-  // Both are cheap and idempotent — safe to fire even if the observer
-  // already caught the same change.
+  // Supplements the ResizeObserver: late-loading fonts and images can shift
+  // layout after the initial measurement. Both paths are idempotent.
   window.addEventListener("load", recalcMax);
   document.fonts?.ready.then(recalcMax);
 

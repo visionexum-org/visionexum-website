@@ -78,9 +78,8 @@ function Navbar() {
     };
   }, []);
 
-  // z-50 keeps the bar above the portalled menu overlay (z-40) so the logo and
-  // the toggler stay reachable while it is open, mirroring the reference's
-  // nav/nav-content stacking.
+  // z-50 places the bar above the portalled menu overlay at z-40, keeping the
+  // logo and the toggle reachable while the menu is open.
   return (
     <header ref={navRef} className="fixed inset-x-0 top-0 z-50">
       {/* Pill wrapper is a plain CSS transition, deliberately separate from
@@ -88,8 +87,8 @@ function Navbar() {
           opacity) — mixing transition-all with GSAP transforms on the same
           element causes fighting/jank, so this keeps its own explicit,
           transform-free property list. */}
-      {/* Always a dark surface for the cursor: transparent over the navy hero
-          at rest, and its own navy pill once scrolled. */}
+      {/* A dark surface in both states: transparent over the hero at rest, and
+          a navy pill once scrolled. */}
       <div
         data-cursor-tone="light"
         className={cn(

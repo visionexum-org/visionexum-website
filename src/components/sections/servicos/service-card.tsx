@@ -14,22 +14,23 @@ const ICONS: Record<ServiceIcon, typeof Info> = {
   loader: LoaderCircle,
 };
 
-// Collapsed card body — light blue deepening step by step, mirroring the ref.
+// Collapsed card body: light blue, deepening by step.
 const COLLAPSED_BG = [
   "bg-[#DAF0FF]",
   "bg-[#C1EAFF]",
   "bg-[#A5E1FF]",
   "bg-[#81D5FF]",
 ];
-// Same 4 colors as raw hex, for the fill overlay (which paints via inline
-// style/GSAP, not Tailwind classes, since it swaps color per interaction).
+// The same four colours as raw hex, for the fill overlay. It paints through
+// inline style rather than Tailwind classes because the colour changes per
+// interaction.
 const COLLAPSED_HEX = ["#DAF0FF", "#C1EAFF", "#A5E1FF", "#81D5FF"];
 const EXPANDED_HEX = "#EDE9E2"; // bg-cream-light
 
 const REVEAL_EASE = "power2.out";
 const REVEAL_BLUR = "blur(7px)";
-// Applied via .timeScale() rather than baked into each duration — speeds up
-// the fill tween and both reveal timelines uniformly, staggers included.
+// Applied through .timeScale() rather than to individual durations, so the
+// fill tween and both reveal timelines scale uniformly, staggers included.
 const SPEED = 1.15;
 
 type ServiceCardProps = {
@@ -39,19 +40,20 @@ type ServiceCardProps = {
   onToggle: () => void;
 };
 
-// Collapsed and expanded content both stay mounted and cross-fade by opacity
-// while GSAP Flip morphs the surrounding box (see servicos-section); the
-// visible one is `relative` and drives the card's height, the hidden one an
-// absolute overlay.
+// Both the collapsed and expanded bodies remain mounted and cross-fade by
+// opacity while GSAP Flip morphs the surrounding box (see servicos-section).
+// The visible body is positioned relative and determines the card height; the
+// hidden one is an absolute overlay.
 //
-// Opening and closing run the same 3-stage sequence, mirrored: (1) a circle,
-// grown from the clicked icon's position, floods the card with the color the
-// new state will have — this masks the content swap, then locks to a
-// full-bleed fill (clipPath: none) so it stays covered as Flip resizes the
-// card (a fixed-px circle wouldn't scale with the box). (2) the real toggle
-// fires and Flip resizes the card. (3) once Flip lands (the
-// "servicos:expanded"/"servicos:collapsed" events from servicos-section), the
-// new view's text reveals line by line and the fill drops.
+// Opening and closing share one three-stage sequence, mirrored:
+//   1. A circle grown from the activating icon floods the card with the
+//      incoming state's colour, masking the content swap, then locks to a
+//      full-bleed fill (clipPath: none) so coverage holds while Flip resizes
+//      the card. A fixed-pixel circle would not scale with the box.
+//   2. The toggle fires and Flip resizes the card.
+//   3. On the "servicos:expanded" / "servicos:collapsed" events dispatched
+//      once Flip settles, the incoming text reveals line by line and the fill
+//      is released.
 function ServiceCard({ data, index, isOpen, onToggle }: ServiceCardProps) {
   const Icon = ICONS[data.icon];
 
@@ -75,10 +77,10 @@ function ServiceCard({ data, index, isOpen, onToggle }: ServiceCardProps) {
   const expandRevealTlRef = useRef<gsap.core.Timeline | null>(null);
   const collapseRevealTlRef = useRef<gsap.core.Timeline | null>(null);
 
-  // Everything each reveal timeline touches directly (not the split lines —
-  // those live and die with their own SplitText instance). Killing a tween
-  // mid-flight leaves it at a partial value; resetting these before the next
-  // .from() prevents it from capturing that leftover value as its target.
+  // Every target each reveal timeline addresses directly. Split lines are
+  // excluded: they are owned by their SplitText instance. A tween killed
+  // mid-flight leaves a partial value, so these are reset before the next
+  // .from() to prevent that value being captured as the new target.
   const getExpandRevealTargets = () => {
     const items = cardElRef.current
       ? Array.from(
@@ -119,8 +121,8 @@ function ServiceCard({ data, index, isOpen, onToggle }: ServiceCardProps) {
     const rect = card.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
-    // Farthest corner from the click point, so the circle fully covers the
-    // card regardless of where on the button it was actually clicked.
+    // Distance to the farthest corner, so the circle covers the card from any
+    // activation point.
     const radius = Math.max(
       Math.hypot(x, y),
       Math.hypot(rect.width - x, y),
@@ -140,7 +142,7 @@ function ServiceCard({ data, index, isOpen, onToggle }: ServiceCardProps) {
         duration: 0.35,
         ease: "power2.out",
         onComplete: () => {
-          // Locks to a full-bleed fill — see the file-level comment above.
+          // Locks to a full-bleed fill; see the file-level note above.
           gsap.set(fill, { clipPath: "none" });
           fillAnimatingRef.current = false;
           fallback();
@@ -158,9 +160,9 @@ function ServiceCard({ data, index, isOpen, onToggle }: ServiceCardProps) {
     runFill(e, COLLAPSED_HEX[index], onToggle);
   };
 
-  // Text reveal only runs once Flip has actually finished resizing this card
-  // (see servicos-section's Flip.from onComplete) — starting any earlier
-  // would animate text into a box that's still changing size underneath it.
+  // The text reveal runs only after Flip has finished resizing the card (see
+  // the Flip.from onComplete in servicos-section). Starting earlier would
+  // animate text inside a box whose dimensions are still changing.
   useEffect(() => {
     const handleExpanded = (e: Event) => {
       const detail = (e as CustomEvent<{ index: number }>).detail;
@@ -175,9 +177,9 @@ function ServiceCard({ data, index, isOpen, onToggle }: ServiceCardProps) {
       summarySplitRef.current?.revert();
       gsap.set(getExpandRevealTargets(), { clearProps: "opacity,filter,transform" });
 
-      // Split now, not on mount: while collapsed this content is width:auto
-      // inside the still-narrow card, so measuring line-wrap any earlier
-      // would split for the wrong width.
+      // Split at this point rather than on mount: while collapsed, the content
+      // is width:auto inside a narrower card, so an earlier measurement would
+      // wrap against the wrong width.
       const split = summaryRef.current
         ? SplitText.create(summaryRef.current, {
             type: "lines",
@@ -245,8 +247,8 @@ function ServiceCard({ data, index, isOpen, onToggle }: ServiceCardProps) {
     return () => window.removeEventListener("servicos:expanded", handleExpanded);
   }, [index]);
 
-  // Mirror of the above for the return trip: once Flip has finished shrinking
-  // the card back down, the collapsed view's own content reveals the same way.
+  // Mirrors the above for the return transition: once Flip has finished
+  // contracting the card, the collapsed body reveals by the same sequence.
   useEffect(() => {
     const handleCollapsed = (e: Event) => {
       const detail = (e as CustomEvent<{ index: number }>).detail;
@@ -296,9 +298,9 @@ function ServiceCard({ data, index, isOpen, onToggle }: ServiceCardProps) {
     return () => window.removeEventListener("servicos:collapsed", handleCollapsed);
   }, [index]);
 
-  // Whichever direction isn't the active one gets its reveal state reset —
-  // covers any interruption (e.g. closing again mid-open-reveal) so the next
-  // run always starts clean rather than fighting a half-finished tween.
+  // The inactive direction has its reveal state reset, so an interruption
+  // leaves the next run with a clean starting state rather than a partially
+  // completed tween.
   useEffect(() => {
     if (isOpen) {
       collapseRevealTlRef.current?.kill();
