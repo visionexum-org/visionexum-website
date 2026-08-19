@@ -100,14 +100,14 @@ export const scoreZones: ScoreZoneData[] = [
     label: "Percepção frágil",
     description:
       "Base presente mas inconsistente. O mercado percebe o valor por vezes — mas não de forma previsível. O marketing tem retorno reduzido.",
-    toneClass: "bg-[#FFFCD8]",
+    toneClass: "bg-[#FFECC5]",
   },
   {
     range: "61–80",
     label: "Em consolidação",
     description:
       "Boa base. A percepção é positiva mas ainda não é consistente em todas as dimensões. A orquestração contínua sustenta a evolução.",
-    toneClass: "bg-[#FFECC5]",
+    toneClass: "bg-[#FFFCD8]",
   },
   {
     range: "81–100",
