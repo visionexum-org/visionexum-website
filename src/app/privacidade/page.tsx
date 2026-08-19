@@ -46,7 +46,7 @@ function List({ items }: { items: React.ReactNode[] }) {
 
 export default function PrivacidadePage() {
   return (
-    <div className="min-h-screen bg-navy">
+    <div data-cursor-tone="light" className="min-h-screen bg-navy">
       <header className="mx-auto flex max-w-3xl items-center justify-between px-6 py-8">
         <Link href="/" aria-label="Visio Nexum — Início">
           <Logo className="h-6 w-auto text-white" />

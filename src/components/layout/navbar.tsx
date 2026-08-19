@@ -88,7 +88,10 @@ function Navbar() {
           opacity) — mixing transition-all with GSAP transforms on the same
           element causes fighting/jank, so this keeps its own explicit,
           transform-free property list. */}
+      {/* Always a dark surface for the cursor: transparent over the navy hero
+          at rest, and its own navy pill once scrolled. */}
       <div
+        data-cursor-tone="light"
         className={cn(
           "mx-auto flex items-center justify-between transition-[width,max-width,margin-top,padding,border-radius,background-color,border-color,box-shadow,backdrop-filter] duration-500 ease-out",
           isScrolled

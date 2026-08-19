@@ -4,6 +4,13 @@ import { useEffect, useRef } from "react";
 
 type CursorMode = "free" | "text";
 
+// A black cursor disappears over the navy hero, the black footer and the
+// navbar pill. Those surfaces carry data-cursor-tone="light" and flip it to
+// white; everything else — most of the site — keeps it black.
+const DARK_SURFACE = '[data-cursor-tone="light"]';
+const TONE_ON_DARK = "#ffffff";
+const TONE_ON_LIGHT = "#000000";
+
 // Two states only: a plain dot, and the caret bar over anything typeable. The
 // shape is sprung between them rather than swapped, which is what made the
 // original transition read as smooth.
@@ -76,6 +83,12 @@ function CustomCursor() {
       return "free";
     };
 
+    let tone = TONE_ON_LIGHT;
+    const resolveTone = (target: EventTarget | null) => {
+      if (!(target instanceof Element)) return TONE_ON_LIGHT;
+      return target.closest(DARK_SURFACE) ? TONE_ON_DARK : TONE_ON_LIGHT;
+    };
+
     const handlePointerMove = (e: PointerEvent) => {
       if (!hasMoved) {
         hasMoved = true;
@@ -86,6 +99,12 @@ function CustomCursor() {
       targetX = e.clientX;
       targetY = e.clientY;
       mode = resolveMode(e.target);
+
+      const nextTone = resolveTone(e.target);
+      if (nextTone !== tone) {
+        tone = nextTone;
+        el.style.backgroundColor = tone;
+      }
     };
 
     const startLoop = () => {
@@ -171,8 +190,11 @@ function CustomCursor() {
     <div
       ref={elRef}
       aria-hidden="true"
-      className="pointer-events-none fixed top-0 left-0 z-999 bg-black will-change-transform"
-      style={{ opacity: 0 }}
+      // Only background-color transitions here. The size, radius and position
+      // are driven frame by frame from the loop above, and a blanket
+      // transition would fight them.
+      className="pointer-events-none fixed top-0 left-0 z-999 transition-[background-color] duration-200 ease-out will-change-transform"
+      style={{ opacity: 0, backgroundColor: TONE_ON_LIGHT }}
     />
   );
 }
