@@ -73,10 +73,7 @@ function HeroSection() {
             )
             .from(
               ".hero-card",
-              // 0.001 rather than 0: at exactly 0 Chromium discards the
-              // compositing layer, requiring the backdrop-blur child to be
-              // recomposited as it fades back in, which lags the entrance.
-              { y: 32, opacity: 0.001, duration: 0.8, stagger: 0.12 },
+              { y: 32, opacity: 0, duration: 0.8, stagger: 0.12 },
               "-=0.5"
             );
 

@@ -1,8 +1,6 @@
 import { GlassCard } from "@/components/shared/glass-card";
 import { heroStat, heroScore } from "@/data/hero";
 
-const cardTint = "bg-[#d4d4d4]/10";
-
 function StatCardContent() {
   return (
     <div className="flex h-full flex-col gap-3 p-5">
@@ -47,10 +45,10 @@ function ScoreCardContent() {
 function HeroCards() {
   return (
     <div className="flex w-full flex-col gap-5 lg:ml-auto lg:max-w-95">
-      <GlassCard tint={cardTint} bordered={false} className="hero-card h-42">
+      <GlassCard className="hero-card h-42">
         <StatCardContent />
       </GlassCard>
-      <GlassCard tint={cardTint} bordered={false} className="hero-card h-[134px]">
+      <GlassCard className="hero-card h-[134px]">
         <ScoreCardContent />
       </GlassCard>
     </div>

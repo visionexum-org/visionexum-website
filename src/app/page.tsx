@@ -18,12 +18,11 @@ export default async function Home() {
 
   return (
     <>
-      {/* Runs synchronously before hydration: applying overflow:hidden here,
-          not in the virtual-scroll effect, avoids a layout reflow landing
-          mid-animation and invalidating the hero cards' backdrop-blur
-          compositing layer as they fade in. It belongs to this route rather
-          than the layout — the class locks the body to 100dvh, which leaves
-          any page without VirtualScroll unable to scroll. */}
+      {/* Runs synchronously before hydration: applying overflow:hidden here
+          rather than in the virtual-scroll effect keeps a layout reflow from
+          landing mid-animation. It belongs to this route rather than the
+          layout, since the class locks the body to 100dvh and would leave any
+          page without VirtualScroll unable to scroll. */}
       <script
         nonce={nonce ?? undefined}
         dangerouslySetInnerHTML={{
