@@ -2,7 +2,16 @@ import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { manrope, sora } from "@/lib/fonts";
 import { CustomCursor } from "@/components/shared/custom-cursor";
-import { SITE_DESCRIPTION, SITE_NAME, SITE_TITLE, SITE_URL } from "@/lib/site-config";
+import { Analytics } from "@/components/shared/analytics";
+import { siteStructuredData } from "@/lib/structured-data";
+import {
+  SITE_DESCRIPTION,
+  SITE_LOCALE,
+  SITE_NAME,
+  SITE_OG_LOCALE,
+  SITE_TITLE,
+  SITE_URL,
+} from "@/lib/site-config";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -12,14 +21,11 @@ export const metadata: Metadata = {
     template: `%s — ${SITE_NAME}`,
   },
   description: SITE_DESCRIPTION,
-  keywords: [
-    "percepção de marca",
-    "consultoria de marketing Angola",
-    "Visio Score",
-    "Visio Method",
-    "PMEs angolanas",
-    "posicionamento estratégico",
-  ],
+  applicationName: SITE_NAME,
+  authors: [{ name: SITE_NAME, url: SITE_URL }],
+  creator: SITE_NAME,
+  publisher: SITE_NAME,
+  category: "business",
   alternates: {
     canonical: "/",
   },
@@ -30,30 +36,36 @@ export const metadata: Metadata = {
       index: true,
       follow: true,
       "max-image-preview": "large",
+      "max-snippet": -1,
+      "max-video-preview": -1,
     },
+  },
+  // Populated from the environment so the property can be verified without a
+  // code change. Next omits the tag entirely when the value is absent.
+  verification: {
+    google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION,
   },
   openGraph: {
     type: "website",
-    locale: "pt_PT",
+    locale: SITE_OG_LOCALE,
     url: SITE_URL,
     siteName: SITE_NAME,
     title: SITE_TITLE,
     description: SITE_DESCRIPTION,
+    images: [
+      {
+        url: "/opengraph-image.png",
+        width: 1200,
+        height: 630,
+        alt: `${SITE_NAME} — arquitectura de percepção para PMEs em Angola`,
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: SITE_TITLE,
     description: SITE_DESCRIPTION,
   },
-};
-
-const organizationJsonLd = {
-  "@context": "https://schema.org",
-  "@type": "Organization",
-  name: SITE_NAME,
-  url: SITE_URL,
-  logo: `${SITE_URL}/icon.png`,
-  description: SITE_DESCRIPTION,
 };
 
 export default async function RootLayout({
@@ -65,21 +77,20 @@ export default async function RootLayout({
 
   return (
     <html
-      lang="pt"
+      lang={SITE_LOCALE}
       className={`${manrope.variable} ${sora.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col" suppressHydrationWarning>
         <script
           type="application/ld+json"
           nonce={nonce ?? undefined}
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(siteStructuredData) }}
         />
-        {/* Forces Chrome to compile its backdrop-filter GPU shader during
-            the very first paint, server-rendered so it needs no JS. That
-            compile is a one-time, page-wide cost — without this, the hero's
-            glass cards pay for it live the moment they're the first thing
-            on the page to use backdrop-filter, showing unblurred for a
-            beat. 1x1px, present from the first byte of HTML. */}
+        {/* Compiles Chrome's backdrop-filter GPU shader during the first paint.
+            The compile is a one-time page-wide cost; without this element the
+            hero's glass cards incur it as they render, appearing unblurred for
+            a frame. Server-rendered at 1x1px, so it requires no JavaScript and
+            is present from the first byte of HTML. */}
         <div
           aria-hidden="true"
           className="pointer-events-none fixed top-0 left-0 size-px overflow-hidden"
@@ -87,6 +98,7 @@ export default async function RootLayout({
         />
         <CustomCursor />
         {children}
+        <Analytics nonce={nonce ?? undefined} />
       </body>
     </html>
   );

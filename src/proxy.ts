@@ -14,9 +14,13 @@ export function proxy(request: NextRequest) {
     "default-src 'self'",
     scriptSrc,
     "style-src 'self' 'unsafe-inline'",
-    "img-src 'self' data: blob:",
+    // Google Analytics is served from googletagmanager.com and reports to
+    // google-analytics.com. Under strict-dynamic the script host is not
+    // consulted, since gtag.js inherits trust from the nonced snippet that
+    // loads it, but the measurement endpoint and pixel must be declared.
+    "img-src 'self' data: blob: https://*.google-analytics.com https://*.googletagmanager.com",
     "font-src 'self'",
-    "connect-src 'self'",
+    "connect-src 'self' https://*.google-analytics.com https://*.analytics.google.com https://*.googletagmanager.com",
     "form-action 'self'",
     "frame-ancestors 'none'",
     "base-uri 'self'",
