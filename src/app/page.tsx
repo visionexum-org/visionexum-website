@@ -3,6 +3,7 @@ import { headers } from "next/headers";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 import { VirtualScroll } from "@/components/shared/virtual-scroll";
+import { Preloader } from "@/components/shared/preloader";
 import { HeroSection } from "@/components/sections/hero/hero-section";
 import { ManifestoSection } from "@/components/sections/manifesto/manifesto-section";
 import { SobreNosSection } from "@/components/sections/sobre-nos/sobre-nos-section";
@@ -29,6 +30,10 @@ export default async function Home() {
           __html: "document.body.classList.add('virtual-scroll-active')",
         }}
       />
+      {/* Outside VirtualScroll: the scroll track carries a transform, which
+          would make a fixed child resolve against the track rather than the
+          viewport. */}
+      <Preloader />
       <Navbar />
       <VirtualScroll>
         <main>

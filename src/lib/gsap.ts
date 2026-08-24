@@ -3,8 +3,9 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { SplitText } from "gsap/SplitText";
 import { Flip } from "gsap/Flip";
 import { DrawSVGPlugin } from "gsap/DrawSVGPlugin";
+import { MorphSVGPlugin } from "gsap/MorphSVGPlugin";
 
-gsap.registerPlugin(ScrollTrigger, SplitText, Flip, DrawSVGPlugin);
+gsap.registerPlugin(ScrollTrigger, SplitText, Flip, DrawSVGPlugin, MorphSVGPlugin);
 
 // Scroll position is driven by the virtual scroll track (see
 // src/lib/virtual-scroll.ts), so every ScrollTrigger must read from it rather
@@ -15,4 +16,4 @@ if (typeof window !== "undefined") {
   ScrollTrigger.defaults({ scroller: document.body });
 }
 
-export { gsap, ScrollTrigger, SplitText, Flip, DrawSVGPlugin };
+export { gsap, ScrollTrigger, SplitText, Flip, DrawSVGPlugin, MorphSVGPlugin };

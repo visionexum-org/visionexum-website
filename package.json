@@ -9,7 +9,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "generate:preloader-shapes": "node scripts/generate-preloader-shapes.mjs"
   },
   "dependencies": {
     "@gsap/react": "^2.1.2",
@@ -39,6 +40,7 @@
     "babel-plugin-react-compiler": "1.0.0",
     "eslint": "^9",
     "eslint-config-next": "^16.3.1",
+    "opentype.js": "^2.0.0",
     "tailwindcss": "^4",
     "typescript": "^5"
   }
