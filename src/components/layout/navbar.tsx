@@ -99,7 +99,7 @@ function Navbar() {
         )}
       >
         <a href="#home" aria-label="Visio Nexum — Home">
-          <Logo className="h-6 w-auto text-white" />
+          <Logo data-nav-logo="" className="h-6 w-auto text-white" />
         </a>
 
         <div className="hidden items-center gap-7.25 lg:flex">
