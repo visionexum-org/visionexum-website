@@ -4,6 +4,7 @@ import { useRef } from "react";
 import { useGSAP } from "@gsap/react";
 
 import { gsap, SplitText } from "@/lib/gsap";
+import { PRELOADER_REVEAL_EVENT } from "@/components/shared/preloader";
 import { SectionContainer } from "@/components/shared/section-container";
 import { HeroBackground } from "@/components/sections/hero/hero-background";
 import { HeroContent } from "@/components/sections/hero/hero-content";
@@ -47,7 +48,17 @@ function HeroSection() {
               })
             : null;
 
-          const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
+          // Held until the preloader begins to lift, so the entrance plays
+          // into view rather than completing behind the panel. The fallback
+          // covers the panel being absent or failing to dispatch.
+          const tl = gsap.timeline({
+            paused: true,
+            defaults: { ease: "power3.out" },
+          });
+
+          const play = () => tl.play();
+          window.addEventListener(PRELOADER_REVEAL_EVENT, play, { once: true });
+          const fallback = window.setTimeout(play, 2400);
 
           tl.from(".hero-bg", { opacity: 0, scale: 1.06, duration: 1.2 })
             .from(
@@ -62,14 +73,13 @@ function HeroSection() {
             )
             .from(
               ".hero-card",
-              // 0.001 rather than 0: at exactly 0 Chromium discards the
-              // compositing layer, requiring the backdrop-blur child to be
-              // recomposited as it fades back in, which lags the entrance.
-              { y: 32, opacity: 0.001, duration: 0.8, stagger: 0.12 },
+              { y: 32, opacity: 0, duration: 0.8, stagger: 0.12 },
               "-=0.5"
             );
 
           return () => {
+            window.removeEventListener(PRELOADER_REVEAL_EVENT, play);
+            window.clearTimeout(fallback);
             tl.kill();
             split?.revert();
           };

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { sendLeadWhatsAppNotification } from "@/lib/whatsapp";
+import { sendLeadEmailNotification } from "@/lib/email";
 import { createMeetingEvent } from "@/lib/google-calendar";
 import { isRateLimited } from "@/lib/rate-limit";
 
@@ -52,7 +53,19 @@ export async function POST(request: Request) {
   }).format(meetingStart);
 
 
-  const [whatsappResult, calendarResult] = await Promise.allSettled([
+  // Settled independently so one unconfigured or failing integration never
+  // prevents the others from delivering.
+  const [emailResult, whatsappResult, calendarResult] = await Promise.allSettled([
+    sendLeadEmailNotification({
+      nome: lead.nome,
+      cargo: lead.cargo,
+      empresa: lead.empresa,
+      setor: lead.setor,
+      email: lead.email,
+      telefone: lead.telefone,
+      dor: lead.dor,
+      reuniao: meetingLabel,
+    }),
     sendLeadWhatsAppNotification({
       nome: lead.nome,
       empresa: lead.empresa,
@@ -75,14 +88,22 @@ export async function POST(request: Request) {
     }),
   ]);
 
+  if (emailResult.status === "rejected") {
+    console.error("Email lead notification failed:", emailResult.reason);
+  }
   if (whatsappResult.status === "rejected") {
     console.error("WhatsApp lead notification failed:", whatsappResult.reason);
   }
   if (calendarResult.status === "rejected") {
     console.error("Google Calendar event creation failed:", calendarResult.reason);
   }
-  if (whatsappResult.status === "rejected" && calendarResult.status === "rejected") {
-    console.error("Lead fallback — integrations not configured:", {
+  // Last resort: with every channel unavailable the submission would
+  // otherwise be lost, so the payload is written to the server log.
+  const delivered = [emailResult, whatsappResult, calendarResult].some(
+    (result) => result.status === "fulfilled"
+  );
+  if (!delivered) {
+    console.error("Lead fallback — no integration configured:", {
       ...lead,
       empresaWebsite: undefined,
       meetingLabel,
@@ -91,6 +112,7 @@ export async function POST(request: Request) {
 
   return NextResponse.json({
     ok: true,
+    email: emailResult.status === "fulfilled",
     whatsapp: whatsappResult.status === "fulfilled",
     calendar: calendarResult.status === "fulfilled",
   });

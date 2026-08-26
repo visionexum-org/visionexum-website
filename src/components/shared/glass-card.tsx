@@ -12,29 +12,28 @@ const gradientBorderMask: React.CSSProperties = {
   maskComposite: "exclude",
 };
 
+// A flat fill in place of a backdrop-filter. backdrop-filter samples what is
+// painted behind the element, so the card could not resolve until the hero
+// photograph had decoded, which is what produced the unblurred frame on first
+// paint. Painting the card's own background removes that dependency, and a
+// scrim at this strength carries the white text over any part of the image.
+const CARD_FILL = "rgba(0, 0, 0, 0.6)";
+
 function GlassCard({
   className,
-  tint = "bg-white/[0.06]",
   bordered = true,
   children,
   ...props
-}: React.ComponentProps<"div"> & { tint?: string; bordered?: boolean }) {
+}: React.ComponentProps<"div"> & { bordered?: boolean }) {
   return (
     <div className={cn("relative rounded-3xl will-change-transform", className)} {...props}>
-      <div
-        className={cn("h-full w-full rounded-3xl backdrop-blur-lg", tint)}
-        style={{
-          willChange: "backdrop-filter",
-          transform: "translateZ(0)",
-          isolation: "isolate",
-        }}
-      >
+      <div className="h-full w-full rounded-3xl" style={{ background: CARD_FILL }}>
         {children}
       </div>
       {bordered && (
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute inset-0 rounded-3xl bg-linear-to-bl from-gold/70 to-transparent p-px"
+          className="pointer-events-none absolute inset-0 rounded-3xl bg-linear-to-b from-gold to-transparent p-px"
           style={gradientBorderMask}
         />
       )}

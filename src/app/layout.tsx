@@ -87,10 +87,10 @@ export default async function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(siteStructuredData) }}
         />
         {/* Compiles Chrome's backdrop-filter GPU shader during the first paint.
-            The compile is a one-time page-wide cost; without this element the
-            hero's glass cards incur it as they render, appearing unblurred for
-            a frame. Server-rendered at 1x1px, so it requires no JavaScript and
-            is present from the first byte of HTML. */}
+            The compile is a one-time page-wide cost, and the header pill would
+            otherwise incur it the first time it blurs on scroll.
+            Server-rendered at 1x1px, so it requires no JavaScript and is
+            present from the first byte of HTML. */}
         <div
           aria-hidden="true"
           className="pointer-events-none fixed top-0 left-0 size-px overflow-hidden"
