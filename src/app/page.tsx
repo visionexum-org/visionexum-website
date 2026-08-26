@@ -26,7 +26,15 @@ export default async function Home() {
       <script
         nonce={nonce ?? undefined}
         dangerouslySetInnerHTML={{
-          __html: "document.body.classList.add('virtual-scroll-active')",
+          __html:
+            "document.body.classList.add('virtual-scroll-active');" +
+            // Scroll position is owned by the track's transform, which always
+            // starts at zero. Left on 'auto', the browser also restores a
+            // native offset on reload, and the two disagree: the viewport
+            // shows the restored position while the track believes it is at
+            // the top, so the page can only travel further down. Declared
+            // before hydration so no offset is ever restored.
+            "if ('scrollRestoration' in history) history.scrollRestoration = 'manual';",
         }}
       />
       {/* Outside VirtualScroll: the scroll track carries a transform, which

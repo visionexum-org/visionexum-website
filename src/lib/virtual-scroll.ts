@@ -259,6 +259,13 @@ function initVirtualScroll(trackEl: HTMLElement) {
   reduceMotionQuery.addEventListener("change", onReduceMotionChange);
 
   document.body.classList.add("virtual-scroll-active");
+
+  // Covers a restored offset surviving the declaration above, from a bfcache
+  // entry or a browser that ignores it. The track is authoritative, so any
+  // native offset is cleared before the first frame.
+  if ("scrollRestoration" in history) history.scrollRestoration = "manual";
+  if (window.scrollY !== 0) window.scrollTo(0, 0);
+
   recalcMax();
 
   const handleWheel = (e: WheelEvent) => {
