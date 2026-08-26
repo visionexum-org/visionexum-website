@@ -76,6 +76,7 @@ export async function POST(request: Request) {
     createMeetingEvent({
       summary: `Diagnóstico Visio Nexum — ${lead.empresa}`,
       description: [
+        `Nome: ${lead.nome}`,
         `Cargo: ${lead.cargo}`,
         `Setor: ${lead.setor}`,
         `Contacto: ${lead.email} / ${lead.telefone}`,
@@ -83,8 +84,7 @@ export async function POST(request: Request) {
       ].join("\n"),
       startISO: meetingStart.toISOString(),
       endISO: meetingEnd.toISOString(),
-      attendeeEmail: lead.email,
-      attendeeName: lead.nome,
+      attendeeEmail: lead.email,
     }),
   ]);
 
