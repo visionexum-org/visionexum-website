@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useMemo, useState } from "react";
 import {
   Card,
   CardContent,
@@ -12,14 +13,15 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { CircleCheckIcon } from "lucide-react";
 import { pt } from "date-fns/locale";
+import { format } from "date-fns";
 import { ArrowUpRight } from "@/components/shared/icons";
+import { AVAILABILITY, earliestDay, latestDay } from "@/lib/availability";
 
-const timeSlots = Array.from({ length: 33 }, (_, i) => {
-  const totalMinutes = i * 15;
-  const hour = Math.floor(totalMinutes / 60) + 9;
-  const minute = totalMinutes % 60;
-  return `${hour.toString().padStart(2, "0")}:${minute.toString().padStart(2, "0")}`;
-});
+/** Parses yyyy-MM-dd into a local midnight, which is what react-day-picker compares against. */
+function toLocalDay(dateISO: string) {
+  const [year, month, day] = dateISO.split("-").map(Number);
+  return new Date(year, month - 1, day);
+}
 
 function BookingStep({
   date,
@@ -38,8 +40,41 @@ function BookingStep({
   onConfirm: () => void;
   isSubmitting?: boolean;
 }) {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  // Held together with the day it belongs to, so a result arriving after the
+  // day has changed is ignored rather than shown against the wrong date.
+  const [lookup, setLookup] = useState<{ date: string; slots: string[] } | null>(null);
+
+  // Weekends, the notice period and the horizon are known without asking the
+  // server, so the month renders correctly on first paint.
+  const bounds = useMemo(
+    () => ({ first: toLocalDay(earliestDay()), last: toLocalDay(latestDay()) }),
+    []
+  );
+
+  const dateISO = date ? format(date, "yyyy-MM-dd") : null;
+
+  // Which of the allowed slots are still free depends on the calendar, so it is
+  // fetched per day. The response is discarded if the day changes mid-flight.
+  useEffect(() => {
+    if (!dateISO) return;
+
+    let active = true;
+    fetch(`/api/disponibilidade?date=${dateISO}`)
+      .then((response) => response.json())
+      .then((result: { slots?: string[] }) => {
+        if (active) setLookup({ date: dateISO, slots: result.slots ?? [] });
+      })
+      .catch(() => {
+        if (active) setLookup({ date: dateISO, slots: [] });
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [dateISO]);
+
+  const slots = lookup && lookup.date === dateISO ? lookup.slots : null;
+  const isLoadingSlots = dateISO !== null && slots === null;
 
   return (
     <div className="flex h-full flex-col">
@@ -55,8 +90,14 @@ function BookingStep({
               mode="single"
               selected={date}
               onSelect={onDateChange}
-              defaultMonth={date}
-              disabled={{ before: today }}
+              defaultMonth={date ?? bounds.first}
+              startMonth={bounds.first}
+              endMonth={bounds.last}
+              disabled={[
+                { before: bounds.first },
+                { after: bounds.last },
+                { dayOfWeek: [0, 6] },
+              ]}
               showOutsideDays={false}
               locale={pt}
               className="bg-transparent p-0 [--cell-size:--spacing(10)]"
@@ -65,17 +106,31 @@ function BookingStep({
           <div className="inset-y-0 right-0 flex w-full flex-col gap-4 border-t max-md:h-60 md:absolute md:w-48 md:border-t-0 md:border-l">
             <ScrollArea className="h-full">
               <div className="flex flex-col gap-2 p-6">
-                {timeSlots.map((time) => (
-                  <Button
-                    key={time}
-                    type="button"
-                    variant={selectedTime === time ? "default" : "outline"}
-                    onClick={() => onTimeChange(time)}
-                    className="w-full shadow-none"
-                  >
-                    {time}
-                  </Button>
-                ))}
+                {!date ? (
+                  <p className="font-sans text-sm text-navy/50">
+                    Escolha primeiro um dia.
+                  </p>
+                ) : isLoadingSlots ? (
+                  <p className="font-sans text-sm text-navy/50">
+                    A verificar disponibilidade…
+                  </p>
+                ) : slots && slots.length > 0 ? (
+                  slots.map((time) => (
+                    <Button
+                      key={time}
+                      type="button"
+                      variant={selectedTime === time ? "default" : "outline"}
+                      onClick={() => onTimeChange(time)}
+                      className="w-full shadow-none"
+                    >
+                      {time}
+                    </Button>
+                  ))
+                ) : (
+                  <p className="font-sans text-sm text-navy/50">
+                    Sem horários disponíveis neste dia. Escolha outro.
+                  </p>
+                )}
               </div>
             </ScrollArea>
           </div>
@@ -95,12 +150,12 @@ function BookingStep({
                     })}
                   </span>{" "}
                   às{" "}
-                  <span className="font-medium text-navy">{selectedTime}</span>
-                  .
+                  <span className="font-medium text-navy">{selectedTime}</span>,
+                  durante {AVAILABILITY.durationMinutes} minutos.
                 </span>
               </>
             ) : (
-              <>Selecione um dia e uma hora para a reunião.</>
+              <>Selecione um dia e uma hora para a reunião. Horas de Luanda.</>
             )}
           </div>
         </CardFooter>

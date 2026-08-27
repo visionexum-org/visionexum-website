@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { sendLeadWhatsAppNotification } from "@/lib/whatsapp";
 import { sendLeadEmailNotification } from "@/lib/email";
-import { createMeetingEvent } from "@/lib/google-calendar";
+import { createMeetingEvent, fetchAvailableSlots, SlotTakenError } from "@/lib/google-calendar";
+import { AVAILABILITY, validateSlot } from "@/lib/availability";
 import { isRateLimited } from "@/lib/rate-limit";
 
 const leadSchema = z.object({
@@ -18,8 +19,8 @@ const leadSchema = z.object({
   time: z.string().regex(/^\d{2}:\d{2}$/),
 });
 
-const MEETING_DURATION_MINUTES = 15;
-const LUANDA_UTC_OFFSET = "+01:00";
+const MEETING_DURATION_MINUTES = AVAILABILITY.durationMinutes;
+const LUANDA_UTC_OFFSET = AVAILABILITY.utcOffset;
 
 export async function POST(request: Request) {
   const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
@@ -42,6 +43,28 @@ export async function POST(request: Request) {
   // detectable by the submitter.
   if (lead.empresaWebsite) {
     return NextResponse.json({ ok: true });
+  }
+
+  // The client cannot be trusted to have applied the rules, and a page left
+  // open overnight offers times that have since fallen inside the notice period.
+  if (!validateSlot(lead.date, lead.time).ok) {
+    return NextResponse.json(
+      { ok: false, error: "O horário escolhido não está disponível para marcação." },
+      { status: 400 }
+    );
+  }
+
+  // Occupancy is checked before any channel fires, so a lead is never told the
+  // meeting is booked for a time that was already taken. Failing to reach the
+  // calendar is not treated as unavailability: email is the primary channel and
+  // must not depend on it.
+  try {
+    const free = await fetchAvailableSlots(lead.date);
+    if (!free.includes(lead.time)) {
+      return NextResponse.json({ ok: false, error: "SLOT_TAKEN" }, { status: 409 });
+    }
+  } catch (error) {
+    console.error("Availability pre-check failed, proceeding:", error);
   }
 
   const meetingStart = new Date(`${lead.date}T${lead.time}:00${LUANDA_UTC_OFFSET}`);
@@ -76,11 +99,13 @@ export async function POST(request: Request) {
     createMeetingEvent({
       summary: `Diagnóstico Visio Nexum — ${lead.empresa}`,
       description: [
-        `Nome: ${lead.nome}`,
-        `Cargo: ${lead.cargo}`,
-        `Setor: ${lead.setor}`,
-        `Contacto: ${lead.email} / ${lead.telefone}`,
-        `Dor: ${lead.dor}`,
+        `Diagnóstico Visio Nexum — ${MEETING_DURATION_MINUTES} minutos.`,
+        "",
+        `Uma conversa breve para perceber o contexto da ${lead.empresa} e`,
+        "identificar onde existe margem de melhoria. Sem apresentação comercial.",
+        "",
+        "Para remarcar ou cancelar, responda a este convite ou escreva para",
+        "geral@visionexum.com.",
       ].join("\n"),
       startISO: meetingStart.toISOString(),
       endISO: meetingEnd.toISOString(),
@@ -96,6 +121,13 @@ export async function POST(request: Request) {
   }
   if (calendarResult.status === "rejected") {
     console.error("Google Calendar event creation failed:", calendarResult.reason);
+  }
+
+  // The slot was taken in the moments between the check above and the booking.
+  // The other channels have already delivered, so the lead is not lost, but the
+  // meeting was not made and the submitter has to be told.
+  if (calendarResult.status === "rejected" && calendarResult.reason instanceof SlotTakenError) {
+    return NextResponse.json({ ok: false, error: "SLOT_TAKEN" }, { status: 409 });
   }
   // Last resort: with every channel unavailable the submission would
   // otherwise be lost, so the payload is written to the server log.

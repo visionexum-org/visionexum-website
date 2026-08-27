@@ -53,6 +53,12 @@ function ContactForm() {
     { dependencies: [step] }
   );
 
+  const handleDateChange = (next: Date | undefined) => {
+    setDate(next);
+    setSelectedTime(null);
+    setSubmitError(null);
+  };
+
   const handleLeadSubmit = (data: LeadFormState) => {
     setLead(data);
     setStep("booking");
@@ -76,6 +82,17 @@ function ContactForm() {
       });
 
       const result: { ok: boolean; error?: string } = await response.json();
+
+      // The slot went while the form was open. Clearing the selection sends the
+      // user back to a freshly fetched list rather than retrying a dead time.
+      if (response.status === 409 || result.error === "SLOT_TAKEN") {
+        setSelectedTime(null);
+        setSubmitError(
+          "Esse horário foi ocupado entretanto. Escolha outro, por favor."
+        );
+        return;
+      }
+
       if (!response.ok || !result.ok) {
         throw new Error(result.error ?? "Não foi possível enviar o pedido.");
       }
@@ -150,7 +167,7 @@ function ContactForm() {
           <>
             <BookingStep
               date={date}
-              onDateChange={setDate}
+              onDateChange={handleDateChange}
               selectedTime={selectedTime}
               onTimeChange={setSelectedTime}
               onBack={() => setStep("lead")}
